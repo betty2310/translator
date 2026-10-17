@@ -1,0 +1,69 @@
+name: Translator
+options:
+  bundleIdPrefix: com.betty
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    ENABLE_HARDENED_RUNTIME: YES  # D17: not sandboxed, but hardened
+    MARKETING_VERSION: "0.1.0"    # overridden by the release tag in CI (v1.2.0 -> 1.2.0)
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  # D11: the only third-party dependencies.
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 3.0.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.10.0
+targets:
+  Translator:
+    type: application
+    platform: macOS
+    sources: [Translator]
+    dependencies:
+      - package: KeyboardShortcuts
+      - package: Sparkle
+    info:
+      path: Translator/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Translator
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        LSUIElement: true  # D4: background agent, no Dock icon
+        NSHumanReadableCopyright: MIT License
+        # In-app updates (D21): appcast.xml is attached to every GitHub Release by .github/workflows/release.yml.
+        SUFeedURL: https://github.com/betty2310/translator/releases/latest/download/appcast.xml
+        SUPublicEDKey: "zbMFwPh/tnBSTnbdAc+ECxZkrijE8i1zwfwoMb1Sq98="  # the owner's Sparkle key (shared with Follow); private half: GitHub secret SPARKLE_PRIVATE_KEY
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400   # daily; AppUpdater also checks at every launch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.betty.translator  # D15
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon  # Translator/Resources/Assets.xcassets/AppIcon.appiconset
+  TranslatorTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [TranslatorTests]
+    dependencies:
+      - target: Translator
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Translator.app/Contents/MacOS/Translator
+        BUNDLE_LOADER: $(TEST_HOST)
+schemes:
+  Translator:
+    build:
+      targets:
+        Translator: all
+        TranslatorTests: [test]
+    test:
+      targets: [TranslatorTests]
