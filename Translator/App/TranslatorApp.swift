@@ -14,7 +14,8 @@ struct TranslatorApp: App {
             Divider()
             Button("Quit \(AppFlavor.name)") { NSApp.terminate(nil) }
         } label: {
-            Text("🦉")  // the app icon is the same owl (Assets.xcassets/AppIcon)
+            // D34: owl-in-glasses template image (design/menubar-icon*.svg); the dev flavor's has a "d" (D33).
+            Image(AppFlavor.isDev ? "MenuBarIconDev" : "MenuBarIcon")
         }
     }
 }

@@ -48,6 +48,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] App icon
 - [x] First release `v0.1.0`
 - [x] Dev flavor: "Translator Dev" next to the installed app, DEV markers (D33)
+- [x] Owl menu bar icon, with a "d" for dev builds (D34)
 
 ## Later / out of scope for v1
 - Translation history and favorites
