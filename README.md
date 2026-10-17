@@ -1,6 +1,6 @@
 # Translator
 
-![](./.github/translator.png)
+![](./.github/pics/screenshot.png)
 
 A native macOS translator you summon with a hotkey, inspired by Raycast Translator.
 
