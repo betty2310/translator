@@ -46,7 +46,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Sparkle updates from `releases/latest/download/appcast.xml` (D21)
 - [x] `release.yml`: self-signed certificate, zip, appcast, GitHub Release (D16, D25)
 - [x] App icon
-- [ ] First release `v0.1.0` (needs the GitHub repo + secrets `SPARKLE_PRIVATE_KEY`, `SIGNING_CERT_P12`, `SIGNING_CERT_PASSWORD`)
+- [x] First release `v0.1.0`
 
 ## Later / out of scope for v1
 - Translation history and favorites
