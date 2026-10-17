@@ -24,9 +24,13 @@ final class SettingsWindowController: NSWindowController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not supported") }
 
-    /// Each tab gets a fixed size so the window animates to it when switching tabs.
+    /// Each tab gets a fixed size so the window animates to it when switching tabs. The tab view controller sizes
+    /// the window from `preferredContentSize`; without it the window stays 500×500 and clips the form's margins.
     private static func tab(_ title: String, symbol: String, height: CGFloat, view: some View) -> NSTabViewItem {
-        let host = NSHostingController(rootView: view.frame(width: 540, height: height))
+        let size = NSSize(width: 540, height: height)
+        let host = NSHostingController(rootView: view.frame(width: size.width, height: size.height))
+        host.sizingOptions = []
+        host.preferredContentSize = size
         host.title = title
         let item = NSTabViewItem(viewController: host)
         item.label = title
