@@ -13,7 +13,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section("Hotkey") {
-                KeyboardShortcuts.Recorder("Show Translator", name: .togglePanel)
+                KeyboardShortcuts.Recorder("Show \(AppFlavor.name)", name: .togglePanel)
                 Text("Press the hotkey anywhere to toggle the panel. It opens with the text selected in the front app.")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -216,9 +216,14 @@ struct UpdatesSettingsView: View {
         Form {
             Section("Updates") {
                 Toggle("Check for updates automatically", isOn: $updater.automaticallyChecks)
-                LabeledContent("Version \(AppUpdater.currentVersion)") {
+                LabeledContent {
                     Button("Check Now") { updater.checkForUpdates() }
                         .disabled(!updater.canCheckForUpdates)
+                } label: {
+                    HStack {
+                        Text("Version \(AppUpdater.currentVersion)")
+                        if AppFlavor.isDev { DevTag() }
+                    }
                 }
             }
             Section("About") {

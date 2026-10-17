@@ -341,6 +341,7 @@ struct FooterBar: View {
             Text("Translator")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
+            if AppFlavor.isDev { DevTag() }
             statusView
             Spacer()
             if model.isPinned {
@@ -403,6 +404,19 @@ struct EngineMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Translation engine")
+    }
+}
+
+/// Marks the dev flavor (D33) so it's never mistaken for the installed app.
+struct DevTag: View {
+    var body: some View {
+        Text("DEV")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(.orange, in: .capsule)
+            .help("Development build")
     }
 }
 

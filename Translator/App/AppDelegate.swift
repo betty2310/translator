@@ -2,8 +2,9 @@ import AppKit
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
-    /// D11: Option+D by default; changeable in Settings → General.
-    static let togglePanel = Self("togglePanel", initial: .init(.d, modifiers: [.option]))
+    /// D11: Option+D by default; changeable in Settings → General. The dev flavor defaults to Option+Shift+D so it
+    /// can run next to the installed app (D33).
+    static let togglePanel = Self("togglePanel", initial: .init(.d, modifiers: AppFlavor.isDev ? [.option, .shift] : [.option]))
 }
 
 /// Startup (D4): builds the panel once, registers the hotkey, starts the updater. Owns the Settings window.

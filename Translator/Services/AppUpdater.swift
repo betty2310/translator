@@ -39,7 +39,7 @@ final class AppUpdater: NSObject {
 
 extension AppUpdater: SPUUpdaterDelegate {
     #if DEBUG
-    /// Debug builds share the bundle id with the installed app; only check when asked.
+    /// The dev flavor (D33) only checks when asked: an update would replace it with the release build.
     nonisolated func updater(_ updater: SPUUpdater, mayPerform updateCheck: SPUUpdateCheck) throws {
         if updateCheck == .updatesInBackground { throw CocoaError(.userCancelled) }
     }

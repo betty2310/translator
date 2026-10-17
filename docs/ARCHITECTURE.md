@@ -30,7 +30,8 @@ TranslationResult(text, engine) ─▶ result pane + engine badge
 
 ```
 Translator/
-  App/        TranslatorApp (@main, MenuBarExtra), AppDelegate (startup, hotkey, Settings window), AppSettings (UserDefaults)
+  App/        TranslatorApp (@main, MenuBarExtra), AppDelegate (startup, hotkey, Settings window), AppSettings (UserDefaults),
+              AppFlavor (dev vs release, D33)
   Panel/      TranslatorPanel (NSPanel subclass), PanelController (show/hide, placement, previous app, resize),
               PanelModel (state, commands, debounce, keyboard routing, overlay lists)
   Views/      PanelView (SourcePane, TranslationPane, LanguageSelector, SwapButton, FooterBar), Overlays (LanguagePicker Cmd+P,

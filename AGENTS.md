@@ -21,7 +21,7 @@ A personal, open-source native macOS translator inspired by Raycast Translator. 
 make gen     # regenerate Translator.xcodeproj from project.yml (XcodeGen)
 make build   # generate + build
 make test    # generate + run unit tests (Swift Testing)
-make run     # build + open the app
+make run     # build + open the app (Debug = "Translator Dev", D33)
 make release VERSION=1.2.0  # Release build → build/Translator-1.2.0.zip (self-signed certificate, D16; SIGN_ID=- for ad-hoc)
 make install # Release build → /Applications, launch
 ```
@@ -41,6 +41,7 @@ make install # Release build → /Applications, launch
 - Keep it simple. The owner rejects over-engineering; v1 scope is D13.
 
 ## Gotchas
+- Debug builds are a separate app, **Translator Dev** (`com.betty.translator.dev`, D33): own settings and API keys, own Accessibility entry, hotkey Option+Shift+D. It runs next to the installed app; check `AppFlavor.isDev`, not the bundle id.
 - Accessibility (TCC) grants are tied to the code signature. Debug builds are ad-hoc signed and may need re-granting after rebuilds; release builds use the self-signed certificate and keep the grant (D16).
 - Release signing must keep `Translator.entitlements` (`disable-library-validation`): without it dyld refuses Sparkle.framework ("different Team IDs") and the app dies before any of its code runs, leaving no log (D17). Check a release with `make install`, not only a debug build.
 - Apple Translation only works offline for installed language models. `TranslationSession(installedSource:target:)` never downloads; downloads need the SwiftUI `.translationTask` + `prepareTranslation()` path (Settings → Engines).

@@ -13,7 +13,7 @@ final class SettingsWindowController: NSWindowController {
         tabs.addTabViewItem(Self.tab("Engines", symbol: "globe", height: 560, view: EnginesSettingsView(settings: settings)))
         tabs.addTabViewItem(Self.tab("Updates", symbol: "arrow.down.circle", height: 280, view: UpdatesSettingsView(updater: updater)))
         let window = NSWindow(contentViewController: tabs)
-        window.title = "Translator Settings"
+        window.title = "\(AppFlavor.name) Settings"
         window.styleMask = [.titled, .closable]
         window.toolbarStyle = .preference
         window.isReleasedWhenClosed = false
