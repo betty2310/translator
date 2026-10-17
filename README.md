@@ -1,5 +1,7 @@
 # Translator
 
+![](./.github/translator.png)
+
 A native macOS translator you summon with a hotkey, inspired by Raycast Translator.
 
 - ⚡ Instant: lives in the background, Option+D shows a floating panel
