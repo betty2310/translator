@@ -42,6 +42,7 @@ make install # Release build → /Applications, launch
 
 ## Gotchas
 - Accessibility (TCC) grants are tied to the code signature. Debug builds are ad-hoc signed and may need re-granting after rebuilds; release builds use the self-signed certificate and keep the grant (D16).
+- Release signing must keep `Translator.entitlements` (`disable-library-validation`): without it dyld refuses Sparkle.framework ("different Team IDs") and the app dies before any of its code runs, leaving no log (D17). Check a release with `make install`, not only a debug build.
 - Apple Translation only works offline for installed language models. `TranslationSession(installedSource:target:)` never downloads; downloads need the SwiftUI `.translationTask` + `prepareTranslation()` path (Settings → Engines).
 - A non-activating `NSPanel` must override `canBecomeKey` to receive typing, and must not activate the app, or the previous app loses focus and paste-back targets the wrong app. Keys are routed in `TranslatorPanel.sendEvent` → `PanelModel.handleKey` before SwiftUI sees them.
 - The simulated Cmd+C fallback must run before the panel becomes key, or the keystroke lands in the panel.

@@ -10,6 +10,7 @@ APP := $(DD)/Build/Products/Release/Translator.app
 # Release builds are re-signed with this self-signed certificate (D16): a stable code identity, so macOS keeps
 # the Accessibility grant across updates. `SIGN_ID=-` signs ad-hoc (e.g. without the certificate).
 SIGN_ID ?= Translator Self-Signed
+ENTITLEMENTS := Translator/Resources/Translator.entitlements
 INSTALL_DIR ?= /Applications
 
 .PHONY: gen build test run release install clean
@@ -24,7 +25,7 @@ run: build
 # Release build signed with $(SIGN_ID), zipped with ditto (keeps the signature and bundle metadata intact).
 release: gen
 	$(XCB) -configuration Release build $(VERSION_FLAGS)
-	codesign --force --options runtime --sign "$(SIGN_ID)" $(APP)
+	codesign --force --options runtime --entitlements $(ENTITLEMENTS) --sign "$(SIGN_ID)" $(APP)
 	codesign --verify --deep --strict $(APP)
 	ditto -c -k --keepParent $(APP) $(DD)/Translator$(if $(VERSION),-$(VERSION)).zip
 install: release

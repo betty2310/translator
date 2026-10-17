@@ -47,6 +47,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.betty.translator  # D15
         GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Translator/Resources/Translator.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon  # Translator/Resources/Assets.xcassets/AppIcon.appiconset
   TranslatorTests:
     type: bundle.unit-test
