@@ -118,6 +118,11 @@ struct EnginesSettingsView: View {
                 Text("Language packs download through macOS. Only installed pairs translate offline.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section("Dictionary") {
+                Toggle("Show dictionary entries for words and short phrases", isOn: $settings.dictionaryLookup)
+                Text("Uses the dictionaries enabled in Dictionary.app, including ones you installed, in its order. Dictionaries for the current language pair come first; enable, disable or reorder them in Dictionary → Settings.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
     }

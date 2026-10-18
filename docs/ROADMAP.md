@@ -52,9 +52,15 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Dev flavor: "Translator Dev" next to the installed app, DEV markers (D33)
 - [x] Owl menu bar icon, with a "d" for dev builds (D34)
 
+## M6: Dictionary
+- [x] Dictionary.app entries under the translation for a word or short phrase, from the user's enabled dictionaries, bilingual ones for the pair first (D35)
+- [x] Settings → Engines toggle; "Open in Dictionary" action (D35)
+- [x] Native rendering of the records' HTML: badges, pronunciation, numbered senses, examples, "Show More" (D35)
+
 ## Later / out of scope for v1
 - Translation history and favorites
 - OCR (translate text in screenshots)
 - More engines (LLMs, Google Translation LLM model)
-- Alternative translations / dictionary
+- Alternative translations
+- Per-dictionary choice in Settings (D35)
 - Responsive layout switch (side by side ↔ stacked by width)

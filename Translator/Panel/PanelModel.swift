@@ -31,12 +31,16 @@ final class PanelModel {
     @ObservationIgnored weak var controller: PanelController?
     @ObservationIgnored private let appleEngine = AppleEngine()
     @ObservationIgnored private let speech = SpeechService()
+    @ObservationIgnored private let dictionary = DictionaryService()
     @ObservationIgnored private var translationTask: Task<Void, Never>?
+    @ObservationIgnored private var dictionaryTask: Task<Void, Never>?
 
     var sourceText = "" {
         didSet { if sourceText != oldValue { scheduleTranslation() } }
     }
     private(set) var translation = ""
+    /// Dictionary.app entries for a word or short phrase, shown under the translation (D35).
+    private(set) var dictionaryEntries: [DictionaryEntry] = []
     private(set) var status: Status = .idle
     var overlay: Overlay = .none {
         didSet {
@@ -64,6 +68,7 @@ final class PanelModel {
             let codes = AppleEngine.supportedCodes(in: LanguageCatalog.all, supported: supported)
             await MainActor.run { self?.appleSupportedCodes = codes }
         }
+        Task { [dictionary] in await dictionary.warmUp() }
     }
 
     var source: Language { settings.source }
@@ -98,6 +103,8 @@ final class PanelModel {
         let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
             translation = ""
+            dictionaryTask?.cancel()
+            dictionaryEntries = []
             status = .idle
             return
         }
@@ -117,10 +124,13 @@ final class PanelModel {
         let text = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
             translation = ""
+            dictionaryTask?.cancel()
+            dictionaryEntries = []
             status = .idle
             return
         }
         status = .translating
+        lookUpInDictionary(text)
         let router = EngineRouter(engines: [
             .google: settings.makeGoogleEngine(),
             .deepL: settings.makeDeepLEngine(),
@@ -137,6 +147,21 @@ final class PanelModel {
             let failure = TranslationError.from(error, engine: .google)
             if failure == .cancelled { return }
             status = .failed(failure)
+        }
+    }
+
+    /// Runs next to the engine; a lookup takes a few ms, so the entry usually shows first (D35).
+    private func lookUpInDictionary(_ text: String) {
+        dictionaryTask?.cancel()
+        guard settings.dictionaryLookup else {
+            dictionaryEntries = []
+            return
+        }
+        let (source, target) = (self.source, self.target)
+        dictionaryTask = Task { [weak self, dictionary] in
+            let entries = await dictionary.lookUp(text, from: source, to: target)
+            guard !Task.isCancelled else { return }
+            self?.dictionaryEntries = entries
         }
     }
 
@@ -221,6 +246,15 @@ final class PanelModel {
         controller?.hide()
     }
 
+    /// Opens the term in Dictionary.app.
+    func openInDictionary() {
+        guard let term = DictionaryLookup.term(for: sourceText),
+              let encoded = term.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let url = URL(string: "dict://\(encoded)") else { return }
+        NSWorkspace.shared.open(url)
+        controller?.hide()
+    }
+
     func clearText() {
         overlay = .none
         sourceText = ""
@@ -257,6 +291,9 @@ final class PanelModel {
             Action(id: "pin", title: isPinned ? "Unpin Window" : "Pin Window", shortcut: "⌘.", icon: isPinned ? "pin.slash" : "pin") { [weak self] in self?.overlay = .none; self?.togglePin() },
             Action(id: "web", title: "Open in Google Translate", shortcut: nil, icon: "safari") { [weak self] in self?.openInGoogleTranslate() },
         ]
+        if !dictionaryEntries.isEmpty {
+            list.append(Action(id: "dictionary", title: "Open in Dictionary", shortcut: nil, icon: "book") { [weak self] in self?.openInDictionary() })
+        }
         for mode in EngineMode.allCases {
             let current = mode == settings.engineMode
             list.append(Action(id: "engine-\(mode.rawValue)", title: "Engine: \(mode.displayName)" + (current ? " (current)" : ""),

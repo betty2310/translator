@@ -56,6 +56,65 @@ struct LanguageCatalogTests {
     }
 }
 
+struct DictionaryLookupTests {
+    @Test func acceptsWordsAndShortPhrases() {
+        #expect(DictionaryLookup.term(for: "hello") == "hello")
+        #expect(DictionaryLookup.term(for: "  take off\n") == "take off")
+        #expect(DictionaryLookup.term(for: "học sinh") == "học sinh")
+        #expect(DictionaryLookup.term(for: "“running,”") == "running")
+        #expect(DictionaryLookup.term(for: "don't") == "don't")
+    }
+
+    @Test func rejectsSentencesAndBlankText() {
+        #expect(DictionaryLookup.term(for: "") == nil)
+        #expect(DictionaryLookup.term(for: " ... ") == nil)
+        #expect(DictionaryLookup.term(for: "this is a whole sentence") == nil)
+        #expect(DictionaryLookup.term(for: "two\nlines") == nil)
+        #expect(DictionaryLookup.term(for: String(repeating: "a", count: 41)) == nil)
+    }
+
+    @Test func picksExactHeadwordsThenLemmas() {
+        #expect(DictionaryLookup.recordIndices(headwords: ["In", "in"], term: "in") == [1])
+        #expect(DictionaryLookup.recordIndices(headwords: ["cat", "cat", "CAT"], term: "cat") == [0, 1])
+        #expect(DictionaryLookup.recordIndices(headwords: ["Hello"], term: "hello") == [0])
+        #expect(DictionaryLookup.recordIndices(headwords: ["the", "thè", "thế"], term: "the") == [0])
+        #expect(DictionaryLookup.recordIndices(headwords: ["cát", "cất", "cắt"], term: "cat") == [])
+        #expect(DictionaryLookup.recordIndices(headwords: ["run", "running"], term: "ran") == [0])
+    }
+
+    @Test func readsLanguagesFromTheName() {
+        let anhViet = DictionaryLookup.info(name: "VIETTIEN Anh-Việt (v6.0b1.b5)", primaryLanguage: "en_GB")
+        #expect(anhViet.source == "en" && anhViet.target == "vi")
+        let vietAnh = DictionaryLookup.info(name: "VIETTIEN Việt-Anh (v6.0b1)", primaryLanguage: nil)
+        #expect(vietAnh.source == "vi" && vietAnh.target == "en")
+        let french = DictionaryLookup.info(name: "French – English", primaryLanguage: "fr")
+        #expect(french.source == "fr" && french.target == "en")
+    }
+
+    @Test func fallsBackToPrimaryLanguageAsMonolingual() {
+        let noad = DictionaryLookup.info(name: "New Oxford American Dictionary", primaryLanguage: "en_US")
+        #expect(noad.source == "en" && noad.target == "en")
+        let unknown = DictionaryLookup.info(name: "My Glossary", primaryLanguage: nil)
+        #expect(unknown.source == nil && unknown.target == nil)
+    }
+
+    @Test func prefersBilingualForThePairThenMonolingualInTheSource() {
+        let dictionaries = [
+            DictionaryLookup.Info(name: "Việt-Anh", source: "vi", target: "en"),
+            DictionaryLookup.Info(name: "Anh-Việt", source: "en", target: "vi"),
+            DictionaryLookup.Info(name: "NOAD", source: "en", target: "en"),
+            DictionaryLookup.Info(name: "Việt-Việt", source: "vi", target: "vi"),
+            DictionaryLookup.Info(name: "Glossary", source: nil, target: nil),
+        ]
+        let enVi = DictionaryLookup.tiers(dictionaries, info: { $0 }, from: "en", to: "vi").map { $0.map(\.name) }
+        #expect(enVi == [["Anh-Việt"], ["NOAD", "Glossary"]])
+        let viEn = DictionaryLookup.tiers(dictionaries, info: { $0 }, from: "vi", to: "en").map { $0.map(\.name) }
+        #expect(viEn == [["Việt-Anh"], ["Việt-Việt", "Glossary"]])
+        let zhEn = DictionaryLookup.tiers(dictionaries, info: { $0 }, from: "zh-CN", to: "en").map { $0.map(\.name) }
+        #expect(zhEn == [[], ["Glossary"]])
+    }
+}
+
 struct TextStatsTests {
     @Test func countsWordsAndCharacters() {
         #expect(TextStats.describe("") == "")
@@ -106,6 +165,7 @@ struct AppSettingsTests {
         #expect(settings.googleAPIVersion == .v3)
         #expect(settings.panelSize == AppSettings.defaultPanelSize)
         #expect(settings.showMenuBarIcon)
+        #expect(settings.dictionaryLookup)
     }
 
     @Test func routerConfigurationReflectsKeys() {

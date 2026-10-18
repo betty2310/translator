@@ -36,6 +36,7 @@ final class AppSettings {
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let showMenuBarIcon = "showMenuBarIcon"
+        static let dictionaryLookup = "dictionaryLookup"
     }
 
     var sourceCode: String { didSet { defaults.set(sourceCode, forKey: Key.sourceCode) } }
@@ -49,6 +50,7 @@ final class AppSettings {
     var deepLAPIKey: String { didSet { defaults.set(deepLAPIKey, forKey: Key.deepLAPIKey) } }
     var layout: PanelLayout { didSet { defaults.set(layout.rawValue, forKey: Key.layout) } }
     var showMenuBarIcon: Bool { didSet { defaults.set(showMenuBarIcon, forKey: Key.showMenuBarIcon) } }
+    var dictionaryLookup: Bool { didSet { defaults.set(dictionaryLookup, forKey: Key.dictionaryLookup) } }
     var panelSize: CGSize {
         didSet {
             defaults.set(panelSize.width, forKey: Key.panelWidth)
@@ -69,6 +71,7 @@ final class AppSettings {
         deepLAPIKey = defaults.string(forKey: Key.deepLAPIKey) ?? ""
         layout = defaults.string(forKey: Key.layout).flatMap(PanelLayout.init) ?? .sideBySide
         showMenuBarIcon = defaults.object(forKey: Key.showMenuBarIcon) as? Bool ?? true
+        dictionaryLookup = defaults.object(forKey: Key.dictionaryLookup) as? Bool ?? true
         let width = defaults.double(forKey: Key.panelWidth)
         let height = defaults.double(forKey: Key.panelHeight)
         panelSize = width > 0 && height > 0 ? CGSize(width: width, height: height) : Self.defaultPanelSize

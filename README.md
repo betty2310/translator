@@ -8,6 +8,7 @@ A native macOS translator you summon with a hotkey, inspired by Raycast Translat
 - 🪟 Native Liquid Glass panel, side by side source and translation
 - ⌨️ Keyboard first: ⌘K actions, ⌘P language picker, ↩ copy, ⌘↩ paste back
 - 🌐 Google Cloud Translation or DeepL, with Apple's on-device translation offline
+- 📖 Dictionary entries for single words, from your own Dictionary.app dictionaries
 - ✂️ Opens with the text you selected in any app
 
 ## Requirements

@@ -309,6 +309,9 @@ struct ResultPane: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
+                if !model.dictionaryEntries.isEmpty {
+                    DictionarySection(entries: model.dictionaryEntries)
+                }
             }
             .padding(.horizontal, 17)
             .padding(.vertical, 9)
