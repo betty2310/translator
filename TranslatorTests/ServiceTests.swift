@@ -147,6 +147,15 @@ struct PanelModelTests {
         #expect(model.overlay == .none)
     }
 
+    @Test func commandDSwapsLanguages() {
+        let model = makeModel()
+        let (source, target) = (model.source, model.target)
+        #expect(model.handleKey(key(2, "d", .command)))
+        #expect(model.source == target)
+        #expect(model.target == source)
+        #expect(!model.handleKey(key(1, "s", .command)))
+    }
+
     @Test func plainTypingPassesThrough() {
         let model = makeModel()
         #expect(!model.handleKey(key(0, "a")))

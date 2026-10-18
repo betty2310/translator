@@ -201,7 +201,7 @@ struct SwapButton: View {
             if showsHint {
                 HStack(spacing: 8) {
                     Text("Swap languages").font(.system(size: 12))
-                    HStack(spacing: 3) { Keycap("⌘"); Keycap("S") }
+                    HStack(spacing: 3) { Keycap("⌘"); Keycap("D") }
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 5)

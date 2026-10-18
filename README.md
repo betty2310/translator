@@ -21,7 +21,7 @@ make run
 ```
 This builds **Translator Dev**, a separate app from the installed Translator (own settings and Accessibility grant, a "d" on the menu bar owl). Press **Option+Shift+D** (Option+D in a release), and open **Settings** (⌘,) to add your Google / DeepL API keys, pick languages, and grant Accessibility (for selected text and paste-back).
 
-In the panel: type to translate, **↩** copies, **⌘↩** pastes into the app you came from, **⌘K** actions, **⌘P** / **⌘⇧P** change languages, **⌘S** swaps, **⌘.** pins, **Esc** closes.
+In the panel: type to translate, **↩** copies, **⌘↩** pastes into the app you came from, **⌘K** actions, **⌘P** / **⌘⇧P** change languages, **⌘D** swaps, **⌘.** pins, **Esc** closes.
 
 ## Install a release
 Download the latest zip from [Releases](https://github.com/betty2310/translator/releases), move `Translator.app` to `/Applications`, then run:

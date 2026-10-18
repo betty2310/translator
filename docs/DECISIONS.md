@@ -29,7 +29,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D4 | Launch model (2026-10-18) | Resident background agent (`LSUIElement`, no Dock icon), launch at login via `SMAppService`, panel pre-built; the hotkey only shows it. Target: visible in < 50 ms. |
 | D5 | Window (2026-10-18) | Raycast-style `NSPanel`: floating, non-activating, centered on the cursor's screen; Esc / click outside dismisses. Pin mode keeps it floating. |
 | D6 | Layout (2026-10-18) | Side by side (source left, translation right) with a language bar on top. Stacked layout as a Settings option. |
-| D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Enter copy & close · Cmd+Enter paste into the previous app. |
+| D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Cmd+D swap (was Cmd+S, 2026-10-18) · Enter copy & close · Cmd+Enter paste into the previous app. |
 | D8 | Initial input (2026-10-18) | Prefill with the front app's selected text (AX API; fallback: simulated Cmd+C with clipboard restore), else empty. Requires the Accessibility permission. |
 | D9 | Languages (2026-10-18) | Explicit source & target, no auto-detect. Default English → Vietnamese. |
 | D10 | Translate trigger (2026-10-18) | Translate as you type with a ~250 ms debounce; cancel in-flight requests. |
@@ -41,7 +41,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D16 | Signing (2026-10-18) | No Apple Developer account. Self-signed certificate stored as a CI secret (stable identity, so the Accessibility grant survives updates). Not notarized; release notes include the `xattr -dr com.apple.quarantine` step. |
 | D17 | Sandbox (2026-10-18) | App Sandbox off (AX selection, simulated keystrokes, paste-back). Hardened Runtime on, with `com.apple.security.cs.disable-library-validation` (2026-10-18): a self-signed certificate has no Team ID, so library validation refused the embedded Sparkle.framework and v0.1.0 crashed at launch. |
 | D18 | Google API details (2026-10-18) | API key typed in Settings and stored as plain config (D26, no Keychain). Without credentials, `Auto` behaves as `Apple` and `Google` is disabled with a "Set up" link. |
-| D19 | Languages UX (2026-10-18) | Picker lists Google's languages; Apple-offline-capable ones are marked. Auto + offline + unsupported pair → clear error. Cmd+S swaps the pair and moves the translation into the input. Remember the last pair; 5 recent languages on top. |
+| D19 | Languages UX (2026-10-18) | Picker lists Google's languages; Apple-offline-capable ones are marked. Auto + offline + unsupported pair → clear error. Cmd+D swaps the pair and moves the translation into the input. Remember the last pair; 5 recent languages on top. |
 | D20 | Project generation (2026-10-18) | XcodeGen `project.yml` committed, `.xcodeproj` git-ignored. |
 | D21 | Appcast (2026-10-18) | `appcast.xml` attached to each GitHub Release; feed URL `releases/latest/download/appcast.xml`. |
 | D22 | Menu bar (2026-10-18) | Menu bar icon shown by default (Open, Settings, Check for Updates, Quit), with a "Hide menu bar icon" toggle. Cmd+, in the panel always opens Settings. |

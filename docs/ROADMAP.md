@@ -29,7 +29,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Language catalog (Google list, Apple-offline marks) (D19)
 - [x] Cmd+P target / Cmd+Shift+P source picker with fuzzy search and 5 recents (D7, D19)
 - [x] Cmd+K action panel: copy, paste, swap, speak, pin, open in Google Translate, change engine (D7)
-- [x] Enter copies & closes; Cmd+S swaps the pair (D7, D19)
+- [x] Enter copies & closes; Cmd+D swaps the pair (D7, D19)
 - [x] Speak source / translation (`AVSpeechSynthesizer`) (D13)
 - [x] Remember the last pair; default English → Vietnamese (D9, D19)
 

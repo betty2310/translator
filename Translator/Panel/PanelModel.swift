@@ -159,7 +159,7 @@ final class PanelModel {
         controller?.hide()
     }
 
-    /// Cmd+S: swap the pair and move the translation into the input (D19).
+    /// Cmd+D: swap the pair and move the translation into the input (D19).
     func swap() {
         let newSource = target
         let newTarget = source
@@ -240,7 +240,7 @@ final class PanelModel {
             Action(id: "copy", title: "Copy Translation", shortcut: "↩", icon: "doc.on.doc") { [weak self] in self?.copyAndClose() },
             Action(id: "paste", title: "Paste to \(previousAppName ?? "Previous App")", shortcut: "⌘↩", icon: "arrow.turn.down.left") { [weak self] in self?.pasteBack() },
             Action(id: "copySource", title: "Copy Source Text", shortcut: nil, icon: "doc.on.doc") { [weak self] in self?.copySource() },
-            Action(id: "swap", title: "Swap Languages", shortcut: "⌘S", icon: "arrow.left.arrow.right") { [weak self] in self?.overlay = .none; self?.swap() },
+            Action(id: "swap", title: "Swap Languages", shortcut: "⌘D", icon: "arrow.left.arrow.right") { [weak self] in self?.overlay = .none; self?.swap() },
             Action(id: "target", title: "Change Target Language", shortcut: "⌘P", icon: "globe") { [weak self] in self?.overlay = .picker(.target) },
             Action(id: "source", title: "Change Source Language", shortcut: "⌘⇧P", icon: "globe") { [weak self] in self?.overlay = .picker(.source) },
             Action(id: "speakTranslation", title: "Speak Translation", shortcut: nil, icon: "speaker.wave.2") { [weak self] in self?.overlay = .none; self?.speakTranslation() },
@@ -328,7 +328,7 @@ final class PanelModel {
             case "k" where !shift: overlay = .actions
             case "p": overlay = .picker(shift ? .source : .target)
             case ".": togglePin()
-            case "s" where !shift: swap()
+            case "d" where !shift: swap()
             case ",": openSettings()
             default: return false
             }

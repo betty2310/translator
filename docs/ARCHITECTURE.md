@@ -65,7 +65,7 @@ protocol TranslationEngine: Sendable {
 - `.nonactivatingPanel`, `.floating` level, `canBecomeKey = true`, joins all Spaces and full-screen apps.
 - Dismissed on Esc and on `resignKey` (click outside) unless pinned (D5).
 - `NSGlassEffectView` is the panel's content view (Liquid Glass, rounded corners); the SwiftUI `PanelView` sits inside it in an `NSHostingView` (D12). Controls inside are plain (Raycast look): no glass buttons, two tinted cards, language selector as text + chevron in each card header.
-- Keyboard: `TranslatorPanel.sendEvent` hands every key-down to `PanelModel.handleKey` first. It consumes Esc, Enter, Cmd+Enter, Cmd+K/P/Shift+P/./S/, and, when an overlay is open, arrows and Enter; everything else reaches the SwiftUI text editor (Shift+Enter inserts a newline).
+- Keyboard: `TranslatorPanel.sendEvent` hands every key-down to `PanelModel.handleKey` first. It consumes Esc, Enter, Cmd+Enter, Cmd+K/P/Shift+P/./D/, and, when an overlay is open, arrows and Enter; everything else reaches the SwiftUI text editor (Shift+Enter inserts a newline).
 - Overlays (`LanguagePicker`, `ActionPanel`) are SwiftUI views over the panes, bottom-right; their list state (`overlayQuery`, `overlayIndex`) lives in `PanelModel` so keys and clicks share one path.
 - Previous app + selection: on the hotkey path the AX read is synchronous; if the focused element has no selection attribute, a simulated Cmd+C runs **before** the panel takes key focus (bounded to ~120 ms, clipboard restored), otherwise the keystroke would land in the panel.
 
