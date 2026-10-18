@@ -11,6 +11,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private(set) var previousApp: NSRunningApplication?
     private static let cornerRadius: CGFloat = 20
     private var pendingShow = false
+    private var outsideClickMonitor: Any?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -76,9 +77,11 @@ final class PanelController: NSObject, NSWindowDelegate {
         if !panel.isVisible { place() }
         panel.makeKeyAndOrderFront(nil)
         panel.invalidateShadow()
+        watchOutsideClicks()
     }
 
     func hide() {
+        stopWatchingOutsideClicks()
         guard panel.isVisible else { return }
         model.overlay = .none
         panel.orderOut(nil)
@@ -98,6 +101,20 @@ final class PanelController: NSObject, NSWindowDelegate {
     private func panelDidResignKey() {
         guard panel.isVisible, !model.isPinned else { return }
         hide()
+    }
+
+    /// The panel never activates the app, so a click in another app doesn't always take key focus from it
+    /// (e.g. on the desktop or the already active app). A global monitor sees only clicks outside our windows.
+    private func watchOutsideClicks() {
+        guard outsideClickMonitor == nil else { return }
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
+            MainActor.assumeIsolated { self?.panelDidResignKey() }
+        }
+    }
+
+    private func stopWatchingOutsideClicks() {
+        if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
+        outsideClickMonitor = nil
     }
 
     /// Centered horizontally on the cursor's screen, a bit above the middle (D5).
