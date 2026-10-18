@@ -31,13 +31,14 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Cmd+P target / Cmd+Shift+P source picker with fuzzy search and 5 recents (D7, D19)
 - [x] Cmd+K action panel: copy, paste, swap, speak, pin, open in Google Translate, change engine (D7)
 - [x] Enter copies & closes; Cmd+D swaps the pair (D7, D19)
+- [x] "Copied to Clipboard" HUD after copy / paste-back (D7)
 - [x] Speak source / translation (`AVSpeechSynthesizer`) (D13)
 - [x] Remember the last pair; default English → Vietnamese (D9, D19)
 
 ## M4: System integration
 - [x] Accessibility permission check + prompt (D8)
 - [x] Prefill with the selected text (AX, fallback simulated Cmd+C + clipboard restore) (D8, D23)
-- [x] Cmd+Enter paste-back into the previous app + clipboard restore (D7, D23)
+- [x] Cmd+Enter paste-back into the previous app; translation stays on the clipboard (D7, D23)
 
 ## M5: Settings & delivery
 - [x] Settings window: General / Engines / Updates & About (D28)

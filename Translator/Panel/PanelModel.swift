@@ -145,17 +145,21 @@ final class PanelModel {
     func copyAndClose() {
         guard !translation.isEmpty else { return }
         PasteService.copy(translation)
+        controller?.showHUD("Copied to Clipboard")
         controller?.hide()
     }
 
+    /// Pastes and leaves the translation on the clipboard, so it's there even if the paste lands nowhere.
     func pasteBack() {
         guard !translation.isEmpty else { return }
+        controller?.showHUD("Pasted and Copied")
         controller?.pasteBack(translation)
     }
 
     func copySource() {
         guard !sourceText.isEmpty else { return }
         PasteService.copy(sourceText)
+        controller?.showHUD("Copied to Clipboard")
         controller?.hide()
     }
 

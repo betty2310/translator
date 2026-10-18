@@ -64,6 +64,7 @@ protocol TranslationEngine: Sendable {
 - Built once in `applicationDidFinishLaunching`, hidden with `orderOut`, shown with `makeKeyAndOrderFront` (no app activation) on the hotkey path (D4).
 - `.nonactivatingPanel`, `.floating` level, `canBecomeKey = true`, joins all Spaces and full-screen apps.
 - Esc clears the input, a second Esc dismisses. Click outside dismisses unless pinned, via `resignKey` and a global mouse-down monitor installed while visible (D5).
+- `HUDWindow`: a click-through pill ("Copied to Clipboard") near the bottom of the screen after copy / paste-back (D7).
 - `NSGlassEffectView` is the panel's content view (Liquid Glass, rounded corners); the SwiftUI `PanelView` sits inside it in an `NSHostingView` (D12). Controls inside are plain (Raycast look): no glass buttons, two tinted cards, language selector as text + chevron in each card header.
 - Keyboard: `TranslatorPanel.sendEvent` hands every key-down to `PanelModel.handleKey` first. It consumes Esc, Enter, Cmd+Enter, Cmd+K/P/Shift+P/./D/, and, when an overlay is open, arrows and Enter; everything else reaches the SwiftUI text editor (Shift+Enter inserts a newline).
 - Overlays (`LanguagePicker`, `ActionPanel`) are SwiftUI views over the panes, bottom-right; their list state (`overlayQuery`, `overlayIndex`) lives in `PanelModel` so keys and clicks share one path.

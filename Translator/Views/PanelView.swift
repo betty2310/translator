@@ -352,7 +352,7 @@ struct FooterBar: View {
             }
             EngineMenu(model: model)
             Divider().frame(height: 16)
-            FooterAction(title: "Copy Translation", keys: ["⌘", "↩"]) { model.copyAndClose() }
+            FooterAction(title: "Copy Translation", keys: ["↩"]) { model.copyAndClose() }
                 .disabled(model.translation.isEmpty)
             Divider().frame(height: 16)
             FooterAction(title: "Actions", keys: ["⌘", "K"], primary: false) { model.overlay = .actions }

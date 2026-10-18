@@ -11,6 +11,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private(set) var previousApp: NSRunningApplication?
     private static let cornerRadius: CGFloat = 20
     private var pendingShow = false
+    private let hud = HUDWindow()
     private var outsideClickMonitor: Any?
 
     init(settings: AppSettings) {
@@ -85,6 +86,10 @@ final class PanelController: NSObject, NSWindowDelegate {
         guard panel.isVisible else { return }
         model.overlay = .none
         panel.orderOut(nil)
+    }
+
+    func showHUD(_ message: String) {
+        hud.show(message, on: panel.screen)
     }
 
     /// Hide, hand focus back, paste (D23).

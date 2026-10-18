@@ -1,7 +1,7 @@
 import AppKit
 
-/// Clipboard actions: copy the result (Enter) and paste it back into the previous app (Cmd+Enter), restoring
-/// whatever the clipboard held before (D7, D23).
+/// Clipboard actions: copy the result (Enter) and paste it back into the previous app (Cmd+Enter). Both leave
+/// the translation on the clipboard (D7, D23).
 @MainActor
 enum PasteService {
     static func copy(_ text: String, to pasteboard: NSPasteboard = .general) {
@@ -9,21 +9,16 @@ enum PasteService {
         pasteboard.setString(text, forType: .string)
     }
 
-    /// Activates `app`, pastes `text` with a simulated Cmd+V, then restores the clipboard. The caller hides the
-    /// panel first so the previous app's text field is key again.
+    /// Copies `text`, activates `app` and pastes with a simulated Cmd+V. The caller hides the panel first so the
+    /// previous app's text field is key again.
     static func paste(_ text: String, into app: NSRunningApplication?) async {
-        let pasteboard = NSPasteboard.general
-        let snapshot = PasteboardSnapshot.take(from: pasteboard)
-        copy(text, to: pasteboard)
+        copy(text)
         if let app, !app.isActive {
             app.activate()
             // Give the window server time to switch key focus before typing.
             try? await Task.sleep(for: .milliseconds(150))
         }
         KeySimulator.post(.v, flags: .maskCommand)
-        // Let the target app read the pasteboard before we put the old contents back.
-        try? await Task.sleep(for: .milliseconds(300))
-        snapshot.restore(to: pasteboard)
     }
 }
 

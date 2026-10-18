@@ -29,7 +29,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D4 | Launch model (2026-10-18) | Resident background agent (`LSUIElement`, no Dock icon), launch at login via `SMAppService`, panel pre-built; the hotkey only shows it. Target: visible in < 50 ms. |
 | D5 | Window (2026-10-18) | Raycast-style `NSPanel`: floating, non-activating, centered on the cursor's screen; click outside dismisses; Esc clears the input first, then dismisses (2026-10-18). Pin mode keeps it floating. |
 | D6 | Layout (2026-10-18) | Side by side (source left, translation right) with a language bar on top. Stacked layout as a Settings option. |
-| D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Cmd+D swap (was Cmd+S, 2026-10-18) · Enter copy & close · Cmd+Enter paste into the previous app. |
+| D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Cmd+D swap (was Cmd+S, 2026-10-18) · Enter copy & close · Cmd+Enter paste into the previous app. Copy and paste show a "Copied" HUD. |
 | D8 | Initial input (2026-10-18) | Prefill with the front app's selected text (AX API; fallback: simulated Cmd+C with clipboard restore), else empty. Requires the Accessibility permission. |
 | D9 | Languages (2026-10-18) | Explicit source & target, no auto-detect. Default English → Vietnamese. |
 | D10 | Translate trigger (2026-10-18) | Translate as you type with a ~250 ms debounce; cancel in-flight requests. |
@@ -45,7 +45,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D20 | Project generation (2026-10-18) | XcodeGen `project.yml` committed, `.xcodeproj` git-ignored. |
 | D21 | Appcast (2026-10-18) | `appcast.xml` attached to each GitHub Release; feed URL `releases/latest/download/appcast.xml`. |
 | D22 | Menu bar (2026-10-18) | Menu bar icon shown by default (Open, Settings, Check for Updates, Quit), with a "Hide menu bar icon" toggle. Cmd+, in the panel always opens Settings. |
-| D23 | Panel behavior (2026-10-18) | Hotkey toggles the panel. ~780×420, resizable, size remembered. Reopen keeps the last text, selected; fresh selected text overrides it. Paste-back: hide, activate the previous app, simulate Cmd+V, restore the clipboard. |
+| D23 | Panel behavior (2026-10-18) | Hotkey toggles the panel. ~780×420, resizable, size remembered. Reopen keeps the last text, selected; fresh selected text overrides it. Paste-back: hide, activate the previous app, simulate Cmd+V; the translation stays on the clipboard (no restore since 2026-10-18, so Cmd+Enter also copies). |
 | D24 | License (2026-10-18) | MIT. |
 | D25 | CI (2026-10-18) | Same three workflows as `project-record` (`test.yml` on PRs, `build.yml` on `main`, `release.yml` on `v*` tags), on the `xcode-27` runner image (GitHub has no `macos-27` label; the Xcode 27 image runs macOS 27). |
 | D26 | Config storage (2026-10-18) | All settings, including the Google API key, in `UserDefaults` (`@AppStorage`). Never in the repo. |
