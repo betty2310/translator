@@ -27,7 +27,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D2 | Google engine (2026-10-18) | Official Google Cloud Translation REST API with an API key. No unofficial endpoint. *Superseded by D30 (2026-10-18): v3 by default, v2 as a switch.* |
 | D3 | Engine selection (2026-10-18) | Setting `Auto` / `Google` / `Apple`. Auto = Google, falling back to Apple Translation when offline, on error, or on timeout (~1.5 s). The result shows an engine badge. Settings can pre-download Apple language packs. *Extended by D31/D32 (2026-10-18): DeepL joins the chain.* |
 | D4 | Launch model (2026-10-18) | Resident background agent (`LSUIElement`, no Dock icon), launch at login via `SMAppService`, panel pre-built; the hotkey only shows it. Target: visible in < 50 ms. |
-| D5 | Window (2026-10-18) | Raycast-style `NSPanel`: floating, non-activating, centered on the cursor's screen; Esc / click outside dismisses. Pin mode keeps it floating. |
+| D5 | Window (2026-10-18) | Raycast-style `NSPanel`: floating, non-activating, centered on the cursor's screen; click outside dismisses; Esc clears the input first, then dismisses (2026-10-18). Pin mode keeps it floating. |
 | D6 | Layout (2026-10-18) | Side by side (source left, translation right) with a language bar on top. Stacked layout as a Settings option. |
 | D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Cmd+D swap (was Cmd+S, 2026-10-18) · Enter copy & close · Cmd+Enter paste into the previous app. |
 | D8 | Initial input (2026-10-18) | Prefill with the front app's selected text (AX API; fallback: simulated Cmd+C with clipboard restore), else empty. Requires the Accessibility permission. |

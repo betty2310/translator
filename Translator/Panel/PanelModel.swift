@@ -228,6 +228,11 @@ final class PanelModel {
         controller?.openSettings()
     }
 
+    /// Esc clears the input first, then closes the panel.
+    func escape() {
+        if sourceText.isEmpty { dismiss() } else { clearText() }
+    }
+
     func dismiss() {
         speech.stop()
         controller?.hide()
@@ -320,7 +325,7 @@ final class PanelModel {
         let isEscape = event.keyCode == KeyCode.escape
 
         if overlay == .none {
-            if isEscape { dismiss(); return true }
+            if isEscape { escape(); return true }
             if isEnter && plain && !shift { copyAndClose(); return true }
             if isEnter && command { pasteBack(); return true }
             guard command else { return false }

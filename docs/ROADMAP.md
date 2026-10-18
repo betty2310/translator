@@ -13,6 +13,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Global hotkey Option+D toggles the panel (`KeyboardShortcuts`, D11, D23)
 - [x] Raycast-style `NSPanel`: floating, non-activating, centered on the cursor's screen, Liquid Glass (D5, D12)
 - [x] Esc / click outside dismisses; previous app keeps focus
+- [x] Esc clears the input first (D5)
 - [x] Side-by-side layout with language bar; size remembered (D6, D23)
 - [x] Pin mode (Cmd+.): stays open, draggable, always on top (D5, D7)
 

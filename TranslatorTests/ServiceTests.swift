@@ -147,6 +147,15 @@ struct PanelModelTests {
         #expect(model.overlay == .none)
     }
 
+    @Test func escapeClearsTextThenCloses() {
+        let model = makeModel()
+        model.sourceText = "hello"
+        #expect(model.handleKey(key(53)))
+        #expect(model.sourceText.isEmpty)
+        #expect(model.handleKey(key(53)))  // empty: dismisses
+        #expect(model.sourceText.isEmpty)
+    }
+
     @Test func commandDSwapsLanguages() {
         let model = makeModel()
         let (source, target) = (model.source, model.target)
