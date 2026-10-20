@@ -39,6 +39,8 @@ final class PanelModel {
         didSet { if sourceText != oldValue { scheduleTranslation() } }
     }
     private(set) var translation = ""
+    /// The trimmed input `translation` belongs to, with the current pair; nil while translating or after a failure.
+    @ObservationIgnored private var translatedText: String?
     /// Dictionary.app entries for a word or short phrase, shown under the translation (D35).
     private(set) var dictionaryEntries: [DictionaryEntry] = []
     private(set) var status: Status = .idle
@@ -117,6 +119,7 @@ final class PanelModel {
 
     func retranslate() {
         translationTask?.cancel()
+        translatedText = nil
         translationTask = Task { [weak self] in await self?.translateNow() }
     }
 
@@ -130,6 +133,7 @@ final class PanelModel {
             return
         }
         status = .translating
+        translatedText = nil
         lookUpInDictionary(text)
         let router = EngineRouter(engines: [
             .google: settings.makeGoogleEngine(),
@@ -141,6 +145,7 @@ final class PanelModel {
             let result = try await router.translate(text, from: source, to: target, configuration: configuration)
             guard !Task.isCancelled else { return }
             translation = result.text
+            translatedText = text
             status = .done(result.engine)
         } catch {
             guard !Task.isCancelled else { return }
@@ -192,14 +197,13 @@ final class PanelModel {
     func swap() {
         let newSource = target
         let newTarget = source
-        let previousTranslation = translation
+        // Only move a translation of the current input; a failed, pending or in-flight one is stale.
+        let isCurrent = translatedText == sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         settings.sourceCode = newSource.code
         settings.targetCode = newTarget.code
-        if !previousTranslation.isEmpty {
-            sourceText = previousTranslation
-        } else {
-            retranslate()
-        }
+        if isCurrent, !translation.isEmpty { sourceText = translation }
+        // Always translate: setting the same text (e.g. a name the engine left as is) doesn't trigger didSet.
+        retranslate()
         selectAllToken += 1
     }
 
