@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Orb setup. Translator is a macOS app (AppKit, SwiftUI, Xcode), so a Linux orb can't build or test it.
+# This installs the Linux Swift toolchain matching Xcode 27 so agents can at least syntax-check
+# edits with `swiftc -parse`.
+set -euo pipefail
+
+SWIFT_VERSION=6.4.1
+prefix="$HOME/.local/swift-$SWIFT_VERSION"
+bin_dir="$HOME/.local/bin"
+
+step() { echo "==> $* ($(date +%T))"; }
+
+step "System packages"
+packages=(libc6-dev libgcc-12-dev libstdc++-12-dev libedit2 libncurses6 libsqlite3-0 libxml2 libcurl4 zlib1g)
+missing=()
+for package in "${packages[@]}"; do
+  dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed" || missing+=("$package")
+done
+if ((${#missing[@]})); then
+  sudo apt-get update -qq
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
+fi
+
+step "Swift $SWIFT_VERSION"
+if [[ ! -x "$prefix/usr/bin/swiftc" ]]; then
+  case "$(uname -m)" in
+    x86_64) suffix="" ;;
+    aarch64) suffix="-aarch64" ;;
+    *) echo "Unsupported architecture $(uname -m)" >&2; exit 1 ;;
+  esac
+  tag="swift-$SWIFT_VERSION-RELEASE"
+  url="https://download.swift.org/swift-$SWIFT_VERSION-release/debian12$suffix/$tag/$tag-debian12$suffix.tar.gz"
+  tmp="$(mktemp -d)"
+  curl -fsSL "$url" | tar -xz -C "$tmp"
+  rm -rf "$prefix"
+  mkdir -p "$(dirname "$prefix")"
+  mv "$tmp/$tag-debian12$suffix" "$prefix"
+  rm -rf "$tmp"
+fi
+mkdir -p "$bin_dir"
+for tool in swift swiftc swift-format; do
+  ln -sfn "$prefix/usr/bin/$tool" "$bin_dir/$tool"
+done
+"$bin_dir/swiftc" --version
+
+step "Agent guidance"
+guidance="$HOME/.config/amp/AGENTS.md"
+mkdir -p "$(dirname "$guidance")"
+touch "$guidance"
+# Replace the block on every run so wording changes reach warm snapshots.
+sed -i '/^<!-- translator-orb:begin -->$/,/^<!-- translator-orb:end -->$/d' "$guidance"
+cat >> "$guidance" <<'EOF'
+<!-- translator-orb:begin -->
+# Translator in Linux orbs
+- This orb runs Linux: `make build`/`make test` need macOS + Xcode and can't run here. Say so when reporting.
+- Syntax-check Swift edits with `swiftc -parse -swift-version 6 $(git ls-files '*.swift')` (Swift 6.4.1,
+  matching Xcode 27; Swift 6 mode enables the bare `/regex/` literals). Full type-checking isn't possible:
+  AppKit, SwiftUI and Translation don't exist on Linux.
+<!-- translator-orb:end -->
+EOF
+
+step "Done"
