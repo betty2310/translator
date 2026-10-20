@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Orb setup. Translator is a macOS app (AppKit, SwiftUI, Xcode), so a Linux orb can't build or test it.
 # This installs the Linux Swift toolchain matching Xcode 27 so agents can at least syntax-check
-# edits with `swiftc -parse`.
+# edits with `swiftc -parse`, and tells them to build and test on the owner's Mac runner.
 set -euo pipefail
 
 SWIFT_VERSION=6.4.1
@@ -56,6 +56,10 @@ cat >> "$guidance" <<'EOF'
 - Syntax-check Swift edits with `swiftc -parse -swift-version 6 $(git ls-files '*.swift')` (Swift 6.4.1,
   matching Xcode 27; Swift 6 mode enables the bare `/regex/` literals). Full type-checking isn't possible:
   AppKit, SwiftUI and Translation don't exist on Linux.
+- To build and test, use the owner's Mac runner `meowwww-amp-app` (macOS + Xcode; its checkout is
+  `/Users/betty/Developer/tutorial/translator`). Start a runner thread there with a `worktree` so the owner's
+  checkout stays untouched. That machine doesn't see this orb's uncommitted work: send a patch in the prompt
+  or upload the files.
 <!-- translator-orb:end -->
 EOF
 
