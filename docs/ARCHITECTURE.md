@@ -70,6 +70,7 @@ protocol TranslationEngine: Sendable {
 - `DictionaryParser` (pure, tested with canned records): `HTMLTree` is a forgiving HTML parser (some records aren't well-formed XML). Oxford records are read by class (`hw`, `ph`, `se1`/`pos`, `msDict`/`df`, `ex`, `subEntry`, `etym`); VIETTIEN-style `<pre>` records line by line (`m`, `lt`, "◦", `<li>` + `<font>`, `z4` idioms, `fi`/`thn`/`bk` extra headings). The result is a `DictionaryEntry`: headword, pronunciations, sections (`main` part of speech, `phrase`, `extra`) of senses with labels and examples.
 - `DictionaryView` renders it: badge per part of speech, numbered senses, examples on a quote bar with the translation in the accent color, `preview(rows:)` until "Show More".
 - `PanelModel.translateNow` starts the lookup in its own task next to the engine; it usually lands first. `warmUp()` at launch loads the dictionaries off the main actor.
+- Click a word (D36): `TranslatorPanel.sendEvent` marks a left mouse-down (`PanelModel.lastInputWasClick`), a key-down clears it. `SourceEditor` reports selection changes to `PanelModel.sourceSelectionChanged`, which after a click looks up `DictionaryLookup.word(in:selection:)` (the selected word or phrase, else the word at the caret). Once it has entries, `PanelController.highlightSource` marks the word with a background rendering attribute on the editor's `NSTextView` (not part of the text; cleared on edits) and `revealDictionaryToken` makes `ResultPane` scroll to the entries. Text changes and programmatic select-alls reset the click flag.
 
 ## Panel
 

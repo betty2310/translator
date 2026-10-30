@@ -268,6 +268,9 @@ struct SourceEditor: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear { focused = true }
+        .onChange(of: selection) {
+            if case .selection(let range) = selection?.indices { model.sourceSelectionChanged(to: range) }
+        }
         .onChange(of: model.focusToken) { focused = true }
         .onChange(of: model.selectAllToken) {
             let text = model.sourceText
@@ -283,6 +286,17 @@ struct ResultPane: View {
     @Bindable var model: PanelModel
 
     var body: some View {
+        ScrollViewReader { proxy in
+            content
+                .onChange(of: model.revealDictionaryToken) {
+                    withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(Self.dictionaryID, anchor: .top) }
+                }
+        }
+    }
+
+    private static let dictionaryID = "dictionary"
+
+    private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 if !model.translation.isEmpty {
@@ -311,6 +325,7 @@ struct ResultPane: View {
                 }
                 if !model.dictionaryEntries.isEmpty {
                     DictionarySection(entries: model.dictionaryEntries)
+                        .id(Self.dictionaryID)
                 }
             }
             .padding(.horizontal, 17)

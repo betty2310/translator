@@ -116,6 +116,25 @@ enum DictionaryLookup {
         return term
     }
 
+    /// The term for a click in longer text (D36) and the range to highlight: the selection when it's a word or
+    /// short phrase (a double-click or a drag), else the word the caret is in or right after. Nil between words
+    /// or for a long selection.
+    static func word(in text: String, selection: Range<String.Index>) -> (term: String, range: Range<String.Index>)? {
+        guard selection.upperBound <= text.endIndex else { return nil }
+        if !selection.isEmpty { return term(for: String(text[selection])).map { ($0, selection) } }
+        let caret = selection.lowerBound
+        var word: (String, Range<String.Index>)?
+        text.enumerateSubstrings(in: text.startIndex..<text.endIndex, options: .byWords) { substring, range, _, stop in
+            guard range.lowerBound <= caret else { stop = true; return }
+            guard caret <= range.upperBound, let substring else { return }
+            word = (substring, range)
+            // A word the caret is inside beats the one it just ends (no space between them in CJK text).
+            if caret < range.upperBound { stop = true }
+        }
+        guard let (substring, range) = word, let term = term(for: substring) else { return nil }
+        return (term, range)
+    }
+
     /// Languages from a name like "VIETTIEN Anh-Việt" or "Vietnamese – English", else from the bundle's primary
     /// language (then taken as monolingual, e.g. New Oxford American Dictionary). Custom dictionaries often
     /// declare no language, or a wrong one, so the name wins.

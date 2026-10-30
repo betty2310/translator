@@ -36,13 +36,25 @@ final class PanelModel {
     @ObservationIgnored private var dictionaryTask: Task<Void, Never>?
 
     var sourceText = "" {
-        didSet { if sourceText != oldValue { scheduleTranslation() } }
+        didSet {
+            guard sourceText != oldValue else { return }
+            lastInputWasClick = false  // the caret move that follows comes from the edit
+            controller?.highlightSource(nil)  // its range no longer matches the text
+            scheduleTranslation()
+        }
     }
     private(set) var translation = ""
     /// The trimmed input `translation` belongs to, with the current pair; nil while translating or after a failure.
     @ObservationIgnored private var translatedText: String?
-    /// Dictionary.app entries for a word or short phrase, shown under the translation (D35).
+    /// Dictionary.app entries for a word or short phrase, shown under the translation (D35), or for the word
+    /// clicked in longer text (D36).
     private(set) var dictionaryEntries: [DictionaryEntry] = []
+    /// What `dictionaryEntries` were looked up for.
+    @ObservationIgnored private var dictionaryTerm: String?
+    /// Bumped when a clicked word's entries land, so the result pane scrolls to them.
+    private(set) var revealDictionaryToken = 0
+    /// Set by a mouse-down in the panel, cleared by a key-down: a caret move then came from a click (D36).
+    @ObservationIgnored var lastInputWasClick = false
     private(set) var status: Status = .idle
     var overlay: Overlay = .none {
         didSet {
@@ -94,6 +106,7 @@ final class PanelModel {
         if let selection, !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, selection != sourceText {
             sourceText = selection
         }
+        lastInputWasClick = false  // the select-all that follows isn't a click
         selectAllToken += 1
         focusToken += 1
     }
@@ -155,19 +168,39 @@ final class PanelModel {
         }
     }
 
-    /// Runs next to the engine; a lookup takes a few ms, so the entry usually shows first (D35).
-    private func lookUpInDictionary(_ text: String) {
+    /// Runs next to the engine; a lookup takes a few ms, so the entry usually shows first (D35). A clicked word
+    /// (`highlight`, D36) is highlighted and scrolled to once it has entries.
+    private func lookUpInDictionary(_ text: String, highlight: NSRange? = nil) {
         dictionaryTask?.cancel()
-        guard settings.dictionaryLookup else {
+        controller?.highlightSource(nil)
+        dictionaryTerm = DictionaryLookup.term(for: text)
+        guard settings.dictionaryLookup, let term = dictionaryTerm else {
             dictionaryEntries = []
             return
         }
         let (source, target) = (self.source, self.target)
         dictionaryTask = Task { [weak self, dictionary] in
-            let entries = await dictionary.lookUp(text, from: source, to: target)
-            guard !Task.isCancelled else { return }
-            self?.dictionaryEntries = entries
+            let entries = await dictionary.lookUp(term, from: source, to: target)
+            guard !Task.isCancelled, let self else { return }
+            dictionaryEntries = entries
+            if let highlight, !entries.isEmpty {
+                controller?.highlightSource(highlight)
+                revealDictionaryToken += 1
+            }
         }
+    }
+
+    /// A click in the source text looks up the word under it, or the word or short phrase it selected (D36).
+    /// Typing and keyboard moves don't. A click on another occurrence of the term shown only moves the highlight.
+    func sourceSelectionChanged(to selection: Range<String.Index>) {
+        guard lastInputWasClick, settings.dictionaryLookup,
+              let word = DictionaryLookup.word(in: sourceText, selection: selection) else { return }
+        let range = NSRange(word.range, in: sourceText)
+        guard word.term != dictionaryTerm else {
+            if !dictionaryEntries.isEmpty { controller?.highlightSource(range) }
+            return
+        }
+        lookUpInDictionary(word.term, highlight: range)
     }
 
     // MARK: Commands (D7)
@@ -204,6 +237,7 @@ final class PanelModel {
         if isCurrent, !translation.isEmpty { sourceText = translation }
         // Always translate: setting the same text (e.g. a name the engine left as is) doesn't trigger didSet.
         retranslate()
+        lastInputWasClick = false  // the select-all that follows isn't a click
         selectAllToken += 1
     }
 
@@ -252,7 +286,7 @@ final class PanelModel {
 
     /// Opens the term in Dictionary.app.
     func openInDictionary() {
-        guard let term = DictionaryLookup.term(for: sourceText),
+        guard let term = dictionaryTerm,
               let encoded = term.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(string: "dict://\(encoded)") else { return }
         NSWorkspace.shared.open(url)
@@ -361,6 +395,7 @@ final class PanelModel {
 
     /// Routes a key-down from the panel. Returns true when consumed.
     func handleKey(_ event: NSEvent) -> Bool {
+        lastInputWasClick = false
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let command = flags.contains(.command)
         let shift = flags.contains(.shift)

@@ -73,6 +73,26 @@ struct DictionaryLookupTests {
         #expect(DictionaryLookup.term(for: String(repeating: "a", count: 41)) == nil)
     }
 
+    @Test func clickPicksTheWordUnderTheCaretOrTheSelection() {
+        let text = "I ran home, then “slept”. Don't wake"
+        func at(_ offset: Int, length: Int = 0) -> String? {
+            let start = text.index(text.startIndex, offsetBy: offset)
+            return DictionaryLookup.word(in: text, selection: start..<text.index(start, offsetBy: length))?.term
+        }
+        #expect(at(3) == "ran")  // inside
+        #expect(at(5) == "ran")  // right after the word
+        #expect(at(6) == "home")  // start of the next word beats the end of the previous one
+        #expect(at(0) == "I")
+        #expect(at(11) == nil)  // between ", " and "then"
+        #expect(at(19) == "slept")  // quotes dropped
+        #expect(at(26) == "Don't")
+        #expect(at(text.count) == "wake")  // end of text: the last word
+        #expect(at(2, length: 9) == "ran home")  // a dragged phrase
+        let caret = text.index(text.startIndex, offsetBy: 20)
+        #expect(DictionaryLookup.word(in: text, selection: caret..<caret).map { text[$0.range] } == "slept")  // highlight
+        #expect(at(0, length: text.count) == nil)  // the whole sentence isn't a term
+    }
+
     @Test func picksExactHeadwordsThenLemmas() {
         #expect(DictionaryLookup.recordIndices(headwords: ["In", "in"], term: "in") == [1])
         #expect(DictionaryLookup.recordIndices(headwords: ["cat", "cat", "CAT"], term: "cat") == [0, 1])

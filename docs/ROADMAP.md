@@ -56,6 +56,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Dictionary.app entries under the translation for a word or short phrase, from the user's enabled dictionaries, bilingual ones for the pair first (D35)
 - [x] Settings → Engines toggle; "Open in Dictionary" action (D35)
 - [x] Native rendering of the records' HTML: badges, pronunciation, numbered senses, examples, "Show More" (D35)
+- [x] Click a word in a sentence or paragraph to see its dictionary entries (D36)
 
 ## Later / out of scope for v1
 - Translation history and favorites

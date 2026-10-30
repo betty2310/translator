@@ -6,6 +6,7 @@ final class TranslatorPanel: NSPanel {
     /// Return true to swallow the key event (routed by `PanelModel.handleKey`).
     var keyHandler: ((NSEvent) -> Bool)?
     var onResignKey: (() -> Void)?
+    var onMouseDown: (() -> Void)?
 
     init(contentRect: NSRect) {
         super.init(contentRect: contentRect,
@@ -29,6 +30,7 @@ final class TranslatorPanel: NSPanel {
 
     override func sendEvent(_ event: NSEvent) {
         if event.type == .keyDown, keyHandler?(event) == true { return }
+        if event.type == .leftMouseDown { onMouseDown?() }
         super.sendEvent(event)
     }
 

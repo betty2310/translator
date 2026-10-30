@@ -42,6 +42,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         panel.delegate = self
         panel.keyHandler = { [weak self] event in self?.model.handleKey(event) ?? false }
         panel.onResignKey = { [weak self] in self?.panelDidResignKey() }
+        panel.onMouseDown = { [weak self] in self?.model.lastInputWasClick = true }
         model.controller = self
     }
 
@@ -101,6 +102,29 @@ final class PanelController: NSObject, NSWindowDelegate {
 
     func openSettings() {
         AppDelegate.shared?.showSettings()
+    }
+
+    /// The editor's text view, kept so a highlight can be cleared after focus moves to an overlay.
+    private weak var highlightedTextView: NSTextView?
+
+    /// Marks the clicked word whose entries are shown (D36). A rendering attribute, not part of the text, so
+    /// typing, copying and pasting never carry it. Nil clears it.
+    func highlightSource(_ range: NSRange?) {
+        if range != nil, let textView = panel.firstResponder as? NSTextView { highlightedTextView = textView }
+        guard let textView = highlightedTextView else { return }
+        let color = NSColor.controlAccentColor.withAlphaComponent(0.3)
+        if let layout = textView.textLayoutManager, let content = layout.textContentManager {
+            layout.removeRenderingAttribute(.backgroundColor, for: layout.documentRange)
+            guard let range,
+                  let start = content.location(content.documentRange.location, offsetBy: range.location),
+                  let end = content.location(start, offsetBy: range.length),
+                  let textRange = NSTextRange(location: start, end: end) else { return }
+            layout.addRenderingAttribute(.backgroundColor, value: color, for: textRange)
+        } else if let layout = textView.layoutManager {
+            let all = NSRange(location: 0, length: (textView.string as NSString).length)
+            layout.removeTemporaryAttribute(.backgroundColor, forCharacterRange: all)
+            if let range { layout.addTemporaryAttribute(.backgroundColor, value: color, forCharacterRange: range) }
+        }
     }
 
     private func panelDidResignKey() {
