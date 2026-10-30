@@ -77,6 +77,7 @@ protocol TranslationEngine: Sendable {
 - Built once in `applicationDidFinishLaunching`, hidden with `orderOut`, shown with `makeKeyAndOrderFront` (no app activation) on the hotkey path (D4).
 - `.nonactivatingPanel`, `.floating` level, `canBecomeKey = true`, joins all Spaces and full-screen apps.
 - Esc clears the input, a second Esc dismisses. Click outside dismisses unless pinned, via `resignKey` and a global mouse-down monitor installed while visible (D5).
+- Position (D37): `PanelPlacement` (pure) turns the size, the screen's visible frame and `AppSettings.panelOffset` into a frame, and snaps a frame onto the guides. `TranslatorPanel.sendEvent` moves the panel itself when a mouse-down lands on a view whose `mouseDownCanMoveWindow` is true (a window-server drag would let macOS tile it); each step goes through `PanelController.drag(to:)`, which snaps and shows `SnapGuides` (a click-through window with dashed lines, below the panel). Mouse-up stores the offset.
 - `HUDWindow`: a click-through pill ("Copied to Clipboard") near the bottom of the screen after copy / paste-back (D7).
 - `NSGlassEffectView` is the panel's content view (Liquid Glass, rounded corners); the SwiftUI `PanelView` sits inside it in an `NSHostingView` (D12). Controls inside are plain (Raycast look): no glass buttons, two tinted cards, language selector as text + chevron in each card header.
 - Keyboard: `TranslatorPanel.sendEvent` hands every key-down to `PanelModel.handleKey` first. It consumes Esc, Enter, Cmd+Enter, Cmd+K/P/Shift+P/./D/, and, when an overlay is open, arrows and Enter; everything else reaches the SwiftUI text editor (Shift+Enter inserts a newline).
@@ -85,7 +86,7 @@ protocol TranslationEngine: Sendable {
 
 ## Storage
 
-- `UserDefaults` only (D26): language pair, recents, engine mode, Google API key + API version + project ID, DeepL API key, layout, panel size, menu bar toggle, dictionary toggle. Hotkey stored by `KeyboardShortcuts`; launch-at-login state read from `SMAppService`; Sparkle keeps its own.
+- `UserDefaults` only (D26): language pair, recents, engine mode, Google API key + API version + project ID, DeepL API key, layout, panel size and position offset, menu bar toggle, dictionary toggle. Hotkey stored by `KeyboardShortcuts`; launch-at-login state read from `SMAppService`; Sparkle keeps its own.
 
 ## Updates
 

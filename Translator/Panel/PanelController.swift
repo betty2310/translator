@@ -43,6 +43,8 @@ final class PanelController: NSObject, NSWindowDelegate {
         panel.keyHandler = { [weak self] event in self?.model.handleKey(event) ?? false }
         panel.onResignKey = { [weak self] in self?.panelDidResignKey() }
         panel.onMouseDown = { [weak self] in self?.model.lastInputWasClick = true }
+        panel.onDrag = { [weak self] frame in self?.drag(to: frame) ?? frame }
+        panel.onDragEnd = { [weak self] in self?.endDrag() }
         model.controller = self
     }
 
@@ -146,23 +148,50 @@ final class PanelController: NSObject, NSWindowDelegate {
         outsideClickMonitor = nil
     }
 
-    /// Centered horizontally on the cursor's screen, a bit above the middle (D5).
-    private func place() {
+    /// On the cursor's screen: centered a bit above the middle (D5), or where it was dragged to (D37).
+    private func place(on screen: NSScreen? = nil) {
         let size = CGSize(width: max(settings.panelSize.width, AppSettings.minimumPanelSize.width),
                           height: max(settings.panelSize.height, AppSettings.minimumPanelSize.height))
-        let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main ?? NSScreen.screens.first
-        guard let visible = screen?.visibleFrame else { return }
-        let x = visible.midX - size.width / 2
-        let y = visible.maxY - visible.height * 0.16 - size.height
-        panel.setFrame(NSRect(x: x.rounded(), y: max(y, visible.minY).rounded(), width: size.width, height: size.height),
-                       display: true)
+        guard let visible = (screen ?? Self.screen(containing: NSEvent.mouseLocation))?.visibleFrame else { return }
+        panel.setFrame(PanelPlacement.frame(size: size, in: visible, offset: settings.panelOffset), display: true)
+    }
+
+    /// Back to the default spot (D37); moves the panel now if it's open.
+    func resetPosition() {
+        settings.panelOffset = nil
+        if panel.isVisible { place(on: panel.screen) }
+    }
+
+    private static func screen(containing point: NSPoint) -> NSScreen? {
+        NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main ?? NSScreen.screens.first
+    }
+
+    // MARK: Dragging (D37)
+
+    private let guides = SnapGuides()
+
+    /// Shows the guides on the screen under the panel's top edge and snaps the panel onto the ones it's near.
+    private func drag(to proposed: NSRect) -> NSRect {
+        guard let screen = Self.screen(containing: NSPoint(x: proposed.midX, y: proposed.maxY)) else { return proposed }
+        let frame = PanelPlacement.snapped(proposed, in: screen.visibleFrame)
+        guides.show(on: screen, alignment: PanelPlacement.alignment(of: frame, in: screen.visibleFrame), below: panel)
+        return frame
+    }
+
+    private func endDrag() {
+        guides.hide()
+        guard let visible = panel.screen?.visibleFrame else { return }
+        settings.panelOffset = PanelPlacement.offset(of: panel.frame, in: visible)
     }
 
     // MARK: NSWindowDelegate
 
     func windowDidEndLiveResize(_ notification: Notification) {
         settings.panelSize = panel.frame.size
+        // Resizing from the left or top edge moves the anchor; keep a dragged position in step.
+        if settings.panelOffset != nil, let visible = panel.screen?.visibleFrame {
+            settings.panelOffset = PanelPlacement.offset(of: panel.frame, in: visible)
+        }
         panel.invalidateShadow()
     }
 }

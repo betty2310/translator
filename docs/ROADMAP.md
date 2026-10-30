@@ -16,6 +16,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Esc clears the input first; click outside also caught by a global mouse monitor (D5)
 - [x] Side-by-side layout with language bar; size remembered (D6, D23)
 - [x] Pin mode (Cmd+.): stays open, draggable, always on top (D5, D7)
+- [x] Dragged position remembered; snap guides while dragging; Reset in Settings and Cmd+K (D37)
 
 ## M2: Engines
 - [x] `TranslationEngine` protocol + `EngineRouter` (D3)

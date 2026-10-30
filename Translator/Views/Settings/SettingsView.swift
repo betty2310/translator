@@ -49,7 +49,15 @@ struct GeneralSettingsView: View {
                             .disabled(settings.panelSize == AppSettings.defaultPanelSize)
                     }
                 }
-                Text("Drag the panel's edges to resize it; the size is remembered.")
+                LabeledContent("Position") {
+                    HStack {
+                        Text(settings.panelOffset == nil ? "Default" : "Custom")
+                            .foregroundStyle(.secondary)
+                        Button("Reset") { AppDelegate.shared?.panelController?.resetPosition() }
+                            .disabled(settings.panelOffset == nil)
+                    }
+                }
+                Text("Drag the panel's edges to resize it, or its background to move it; both are remembered. While dragging, dashed lines mark the edges of the default spot, and the panel snaps to them.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Accessibility") {

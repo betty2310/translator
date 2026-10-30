@@ -337,6 +337,12 @@ final class PanelModel {
             list.append(Action(id: "engine-\(mode.rawValue)", title: "Engine: \(mode.displayName)" + (current ? " (current)" : ""),
                                shortcut: nil, icon: current ? "checkmark.circle" : "circle") { [weak self] in self?.setEngineMode(mode) })
         }
+        if settings.panelOffset != nil {
+            list.append(Action(id: "resetPosition", title: "Reset Window Position", shortcut: nil, icon: "arrow.up.and.down.and.arrow.left.and.right") { [weak self] in
+                self?.overlay = .none
+                self?.controller?.resetPosition()
+            })
+        }
         list.append(Action(id: "clear", title: "Clear Text", shortcut: nil, icon: "xmark.circle") { [weak self] in self?.clearText() })
         list.append(Action(id: "settings", title: "Settings…", shortcut: "⌘,", icon: "gearshape") { [weak self] in self?.openSettings() })
         return list

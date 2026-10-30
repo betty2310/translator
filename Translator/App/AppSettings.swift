@@ -35,6 +35,8 @@ final class AppSettings {
         static let layout = "panelLayout"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
+        static let panelOffsetX = "panelOffsetX"
+        static let panelOffsetY = "panelOffsetY"
         static let showMenuBarIcon = "showMenuBarIcon"
         static let dictionaryLookup = "dictionaryLookup"
     }
@@ -57,6 +59,13 @@ final class AppSettings {
             defaults.set(panelSize.height, forKey: Key.panelHeight)
         }
     }
+    /// Where the panel was dragged, relative to its default spot (`PanelPlacement`, D37). Nil = default.
+    var panelOffset: CGPoint? {
+        didSet {
+            defaults.set(panelOffset?.x, forKey: Key.panelOffsetX)
+            defaults.set(panelOffset?.y, forKey: Key.panelOffsetY)
+        }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -75,6 +84,11 @@ final class AppSettings {
         let width = defaults.double(forKey: Key.panelWidth)
         let height = defaults.double(forKey: Key.panelHeight)
         panelSize = width > 0 && height > 0 ? CGSize(width: width, height: height) : Self.defaultPanelSize
+        if let x = defaults.object(forKey: Key.panelOffsetX) as? Double, let y = defaults.object(forKey: Key.panelOffsetY) as? Double {
+            panelOffset = CGPoint(x: x, y: y)
+        } else {
+            panelOffset = nil
+        }
     }
 
     var source: Language { LanguageCatalog.languageOrPlaceholder(for: sourceCode) }

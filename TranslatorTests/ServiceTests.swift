@@ -168,6 +168,41 @@ struct PasteboardSnapshotTests {
     }
 }
 
+struct PanelPlacementTests {
+    // A screen offset like a second display: default anchor (1640, 840).
+    private let visible = CGRect(x: 1000, y: 0, width: 1280, height: 1000)
+    private let size = CGSize(width: 780, height: 420)
+
+    @Test func defaultFrameIsCenteredBelowTheTop() {
+        #expect(PanelPlacement.frame(size: size, in: visible, offset: nil) == CGRect(x: 1250, y: 420, width: 780, height: 420))
+    }
+
+    @Test func offsetRoundTripsAndFollowsTheScreen() {
+        let dragged = CGRect(x: 1100, y: 500, width: 780, height: 420)  // top-center (1490, 920)
+        let offset = PanelPlacement.offset(of: dragged, in: visible)
+        #expect(offset == CGPoint(x: -150, y: 80))
+        #expect(PanelPlacement.frame(size: size, in: visible, offset: offset) == dragged)
+        // Same spot relative to the default on another screen.
+        let other = CGRect(x: 0, y: 0, width: 1920, height: 1080)  // anchor (960, 907.2)
+        #expect(PanelPlacement.frame(size: size, in: other, offset: offset) == CGRect(x: 420, y: 567, width: 780, height: 420))
+        #expect(PanelPlacement.offset(of: PanelPlacement.frame(size: size, in: other, offset: nil), in: other) == nil)
+    }
+
+    @Test func frameStaysOnScreen() {
+        let frame = PanelPlacement.frame(size: size, in: visible, offset: CGPoint(x: 5000, y: 5000))
+        #expect(frame == CGRect(x: 1500, y: 580, width: 780, height: 420))  // right and top edges of the screen
+    }
+
+    @Test func snapsOnlyWithinDistanceOnEachAxis() {
+        // 10 pt right of center (snaps), 30 pt below the default height (doesn't).
+        let near = CGRect(x: 1260, y: 390, width: 780, height: 420)
+        #expect(PanelPlacement.alignment(of: near, in: visible) == .init(centered: true, atDefaultHeight: false))
+        #expect(PanelPlacement.snapped(near, in: visible) == CGRect(x: 1250, y: 390, width: 780, height: 420))
+        let far = CGRect(x: 1263, y: 408, width: 780, height: 420)  // 13 pt right, 12 pt below
+        #expect(PanelPlacement.snapped(far, in: visible) == CGRect(x: 1263, y: 420, width: 780, height: 420))
+    }
+}
+
 @MainActor
 struct AppSettingsTests {
     private func makeSettings() -> AppSettings {
@@ -186,6 +221,18 @@ struct AppSettingsTests {
         #expect(settings.panelSize == AppSettings.defaultPanelSize)
         #expect(settings.showMenuBarIcon)
         #expect(settings.dictionaryLookup)
+    }
+
+    @Test func panelOffsetPersistsAndResets() {
+        let suite = "com.betty.translator.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.panelOffset == nil)
+        settings.panelOffset = CGPoint(x: -120, y: 0)
+        #expect(AppSettings(defaults: defaults).panelOffset == CGPoint(x: -120, y: 0))
+        settings.panelOffset = nil
+        #expect(AppSettings(defaults: defaults).panelOffset == nil)
     }
 
     @Test func routerConfigurationReflectsKeys() {
