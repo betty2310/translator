@@ -356,7 +356,7 @@ struct FooterBar: View {
             Image("Mascot")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 18)
+                .frame(height: 24)
             Text("Translator")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)

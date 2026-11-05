@@ -30,7 +30,7 @@ for s in 16 32 128 256 512; do
   magick "$tmp/icon.png" -resize $((s * 2))x$((s * 2)) "$assets/AppIcon.appiconset/icon_${s}x${s}@2x.png"
 done
 
-# Footer mascot: no background, 18 pt tall. The outlines are thickened first,
+# Footer mascot: no background, 24 pt tall. The outlines are thickened first,
 # or they shrink to faint 1 px lines at that size.
-magick "$src" -channel RGB -morphology Erode Disk:7 +channel -resize x108 \
+magick "$src" -channel RGB -morphology Erode Disk:7 +channel -resize x144 \
   "$assets/Mascot.imageset/mascot.png"
