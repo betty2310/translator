@@ -352,10 +352,11 @@ struct FooterBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // From the asset catalog, not `NSApp.applicationIconImage`: Launch Services caches that per bundle.
-            Image(nsImage: NSImage(named: "AppIcon") ?? NSApp.applicationIconImage)
+            // The mascot without the app icon's background (D38).
+            Image("Mascot")
                 .resizable()
-                .frame(width: 22, height: 22)
+                .scaledToFit()
+                .frame(height: 18)
             Text("Translator")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -369,10 +370,10 @@ struct FooterBar: View {
                     .help("Pinned (⌘.)")
             }
             EngineMenu(model: model)
-            Divider().frame(height: 16)
+            Divider().frame(height: 18)
             FooterAction(title: "Copy Translation", keys: ["↩"]) { model.copyAndClose() }
                 .disabled(model.translation.isEmpty)
-            Divider().frame(height: 16)
+            Divider().frame(height: 18)
             FooterAction(title: "Actions", keys: ["⌘", "K"], primary: false) { model.overlay = .actions }
         }
         .font(.system(size: 13))
