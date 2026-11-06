@@ -9,6 +9,8 @@ import Translation
 final class PanelModel {
     enum LanguageRole: Equatable { case source, target }
     enum Overlay: Equatable { case none, actions, picker(LanguageRole) }
+    /// What the panel shows: the translator, or the history list in its place (D39).
+    enum Screen: Equatable { case translator, history }
     enum Status: Equatable { case idle, translating, done(EngineID), failed(TranslationError) }
 
     struct Action: Identifiable {
@@ -34,6 +36,12 @@ final class PanelModel {
     @ObservationIgnored private let dictionary = DictionaryService()
     @ObservationIgnored private var translationTask: Task<Void, Never>?
     @ObservationIgnored private var dictionaryTask: Task<Void, Never>?
+    @ObservationIgnored private let historyStore: HistoryStore
+    /// Loads the history at launch; saves run one after another so the file ends with the latest list.
+    @ObservationIgnored private(set) var historyLoadTask: Task<Void, Never>?
+    @ObservationIgnored private(set) var historySaveTask: Task<Void, Never>?
+    /// The entry this panel session recorded last, which typing more replaces (D39). Nil starts a new entry.
+    @ObservationIgnored private var historySession: HistoryEntry?
 
     var sourceText = "" {
         didSet {
@@ -68,6 +76,31 @@ final class PanelModel {
     }
     var overlayIndex = 0
     var isPinned = false
+    var screen: Screen = .translator {
+        didSet {
+            guard screen != oldValue else { return }
+            overlay = .none
+            historyQuery = ""
+            if screen == .history {
+                history = TranslationHistory.pruned(history, now: .now)
+            } else {
+                focusToken += 1
+            }
+        }
+    }
+    /// The last 30 days of translations, newest first (D39).
+    private(set) var history: [HistoryEntry] = [] {
+        didSet { filterHistory() }
+    }
+    var historyQuery = "" {
+        didSet {
+            filterHistory()
+            historyIndex = 0
+        }
+    }
+    /// `history` matching `historyQuery`, kept so a long list isn't filtered again on every render.
+    private(set) var filteredHistory: [HistoryEntry] = []
+    var historyIndex = 0
     var previousAppName: String?
     /// Bumped to ask the editor to select everything / take focus (D23).
     private(set) var selectAllToken = 0
@@ -75,8 +108,14 @@ final class PanelModel {
     /// Google codes Apple can translate on-device, for the picker marks (D19).
     private(set) var appleSupportedCodes: Set<String> = []
 
-    init(settings: AppSettings) {
+    init(settings: AppSettings, historyStore: HistoryStore = .standard) {
         self.settings = settings
+        self.historyStore = historyStore
+        historyLoadTask = Task { [weak self, historyStore] in
+            let loaded = await historyStore.load()
+            guard let self else { return }
+            history = TranslationHistory.pruned(history + loaded, now: .now)
+        }
         Task.detached(priority: .utility) { [weak self] in
             let supported = await LanguageAvailability().supportedLanguages
             let codes = AppleEngine.supportedCodes(in: LanguageCatalog.all, supported: supported)
@@ -103,6 +142,8 @@ final class PanelModel {
     /// Reopen keeps the last text, selected; a fresh selection replaces it (D23).
     func prepareForShow(selection: String?) {
         overlay = .none
+        screen = .translator
+        historySession = nil
         if let selection, !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, selection != sourceText {
             sourceText = selection
         }
@@ -160,6 +201,7 @@ final class PanelModel {
             translation = result.text
             translatedText = text
             status = .done(result.engine)
+            recordHistory(text, translation: result.text, engine: result.engine)
         } catch {
             guard !Task.isCancelled else { return }
             let failure = TranslationError.from(error, engine: .google)
@@ -235,6 +277,7 @@ final class PanelModel {
         settings.sourceCode = newSource.code
         settings.targetCode = newTarget.code
         if isCurrent, !translation.isEmpty { sourceText = translation }
+        historySession = nil
         // Always translate: setting the same text (e.g. a name the engine left as is) doesn't trigger didSet.
         retranslate()
         lastInputWasClick = false  // the select-all that follows isn't a click
@@ -296,6 +339,7 @@ final class PanelModel {
     func clearText() {
         overlay = .none
         sourceText = ""
+        historySession = nil
         focusToken += 1
     }
 
@@ -314,9 +358,89 @@ final class PanelModel {
         controller?.hide()
     }
 
+    // MARK: History (D39)
+
+    private func recordHistory(_ text: String, translation: String, engine: EngineID) {
+        let entry = HistoryEntry(date: .now, sourceText: text, translation: translation,
+                                 sourceCode: source.code, targetCode: target.code, engine: engine)
+        history = TranslationHistory.recording(entry, after: historySession, in: history, now: .now)
+        historySession = entry
+        saveHistory()
+    }
+
+    private func saveHistory() {
+        let (entries, previous) = (history, historySaveTask)
+        historySaveTask = Task { [historyStore] in
+            await previous?.value
+            await historyStore.save(entries)
+        }
+    }
+
+    private func filterHistory() {
+        filteredHistory = TranslationHistory.filter(history, query: historyQuery)
+        historyIndex = min(historyIndex, max(filteredHistory.count - 1, 0))
+    }
+
+    var selectedHistoryEntry: HistoryEntry? {
+        filteredHistory.indices.contains(historyIndex) ? filteredHistory[historyIndex] : nil
+    }
+
+    func selectHistoryEntry(_ id: HistoryEntry.ID) {
+        if let index = filteredHistory.firstIndex(where: { $0.id == id }) { historyIndex = index }
+    }
+
+    func showHistory() {
+        screen = .history
+    }
+
+    /// Puts the entry back in the translator with its pair and saved translation, without translating again.
+    func openHistoryEntry() {
+        guard let entry = selectedHistoryEntry else { return }
+        screen = .translator
+        settings.sourceCode = entry.sourceCode
+        settings.targetCode = entry.targetCode
+        historySession = nil
+        sourceText = entry.sourceText  // schedules a translation, cancelled below
+        translationTask?.cancel()
+        translation = entry.translation
+        translatedText = entry.sourceText
+        status = .done(entry.engine)
+        lookUpInDictionary(entry.sourceText)
+    }
+
+    func copyHistoryEntry() {
+        guard let entry = selectedHistoryEntry else { return }
+        PasteService.copy(entry.translation)
+        controller?.showHUD("Copied to Clipboard")
+        controller?.hide()
+    }
+
+    func copyHistorySource() {
+        guard let entry = selectedHistoryEntry else { return }
+        PasteService.copy(entry.sourceText)
+        controller?.showHUD("Copied to Clipboard")
+        controller?.hide()
+    }
+
+    func deleteHistoryEntry() {
+        overlay = .none
+        guard let entry = selectedHistoryEntry else { return }
+        history.removeAll { $0.id == entry.id }
+        if historySession?.id == entry.id { historySession = nil }
+        saveHistory()
+    }
+
+    func clearHistory() {
+        overlay = .none
+        history = []
+        historySession = nil
+        saveHistory()
+    }
+
     // MARK: Overlays
 
     var actions: [Action] {
+        if screen == .history { return historyActions }
         var list: [Action] = [
             Action(id: "copy", title: "Copy Translation", shortcut: "↩", icon: "doc.on.doc") { [weak self] in self?.copyAndClose() },
             Action(id: "paste", title: "Paste to \(previousAppName ?? "Previous App")", shortcut: "⌘↩", icon: "arrow.turn.down.left") { [weak self] in self?.pasteBack() },
@@ -328,6 +452,7 @@ final class PanelModel {
             Action(id: "speakSource", title: "Speak Source", shortcut: nil, icon: "speaker.wave.1") { [weak self] in self?.overlay = .none; self?.speakSource() },
             Action(id: "pin", title: isPinned ? "Unpin Window" : "Pin Window", shortcut: "⌘.", icon: isPinned ? "pin.slash" : "pin") { [weak self] in self?.overlay = .none; self?.togglePin() },
             Action(id: "web", title: "Open in Google Translate", shortcut: nil, icon: "safari") { [weak self] in self?.openInGoogleTranslate() },
+            Action(id: "history", title: "Translation History", shortcut: nil, icon: "clock.arrow.circlepath") { [weak self] in self?.showHistory() },
         ]
         if !dictionaryEntries.isEmpty {
             list.append(Action(id: "dictionary", title: "Open in Dictionary", shortcut: nil, icon: "book") { [weak self] in self?.openInDictionary() })
@@ -344,6 +469,25 @@ final class PanelModel {
             })
         }
         list.append(Action(id: "clear", title: "Clear Text", shortcut: nil, icon: "xmark.circle") { [weak self] in self?.clearText() })
+        list.append(Action(id: "settings", title: "Settings…", shortcut: "⌘,", icon: "gearshape") { [weak self] in self?.openSettings() })
+        return list
+    }
+
+    /// Cmd+K while the history list is shown (D39).
+    private var historyActions: [Action] {
+        var list: [Action] = []
+        if selectedHistoryEntry != nil {
+            list += [
+                Action(id: "openEntry", title: "Open in Translator", shortcut: "↩", icon: "arrow.uturn.left") { [weak self] in self?.openHistoryEntry() },
+                Action(id: "copyEntry", title: "Copy Translation", shortcut: "⌘↩", icon: "doc.on.doc") { [weak self] in self?.copyHistoryEntry() },
+                Action(id: "copyEntrySource", title: "Copy Source Text", shortcut: nil, icon: "doc.on.doc") { [weak self] in self?.copyHistorySource() },
+                Action(id: "deleteEntry", title: "Delete Entry", shortcut: "⌘⌫", icon: "trash") { [weak self] in self?.deleteHistoryEntry() },
+            ]
+        }
+        if !history.isEmpty {
+            list.append(Action(id: "clearHistory", title: "Clear History", shortcut: nil, icon: "xmark.bin") { [weak self] in self?.clearHistory() })
+        }
+        list.append(Action(id: "back", title: "Back to Translator", shortcut: nil, icon: "character.bubble") { [weak self] in self?.screen = .translator })
         list.append(Action(id: "settings", title: "Settings…", shortcut: "⌘,", icon: "gearshape") { [weak self] in self?.openSettings() })
         return list
     }
@@ -397,6 +541,7 @@ final class PanelModel {
         static let escape: UInt16 = 53
         static let down: UInt16 = 125
         static let up: UInt16 = 126
+        static let delete: UInt16 = 51
     }
 
     /// Routes a key-down from the panel. Returns true when consumed.
@@ -409,6 +554,25 @@ final class PanelModel {
         let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
         let isEnter = event.keyCode == KeyCode.return || event.keyCode == KeyCode.keypadEnter
         let isEscape = event.keyCode == KeyCode.escape
+
+        if overlay == .none, screen == .history {
+            if isEscape {
+                if historyQuery.isEmpty { screen = .translator } else { historyQuery = "" }
+                return true
+            }
+            if event.keyCode == KeyCode.down { historyIndex = min(historyIndex + 1, max(filteredHistory.count - 1, 0)); return true }
+            if event.keyCode == KeyCode.up { historyIndex = max(historyIndex - 1, 0); return true }
+            if isEnter && plain && !shift { openHistoryEntry(); return true }
+            if isEnter && command { copyHistoryEntry(); return true }
+            if event.keyCode == KeyCode.delete && command { deleteHistoryEntry(); return true }
+            guard command else { return false }
+            switch key {
+            case "k" where !shift: overlay = .actions
+            case ",": openSettings()
+            default: return false
+            }
+            return true
+        }
 
         if overlay == .none {
             if isEscape { escape(); return true }

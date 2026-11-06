@@ -246,13 +246,86 @@ struct AppSettingsTests {
     }
 }
 
+struct TranslationHistoryTests {
+    private let now = Date(timeIntervalSince1970: 1_800_000_000)
+    private let day: TimeInterval = 24 * 60 * 60
+
+    private func entry(_ text: String, _ pair: (String, String) = ("en", "vi"), age: TimeInterval = 0) -> HistoryEntry {
+        HistoryEntry(date: now.addingTimeInterval(-age), sourceText: text, translation: "t:" + text,
+                     sourceCode: pair.0, targetCode: pair.1, engine: .google)
+    }
+
+    @Test func keepsOnlyTheLast30Days() {
+        let kept = entry("kept", age: 30 * day - 1)
+        let dropped = entry("dropped", age: 30 * day + 1)
+        #expect(TranslationHistory.pruned([kept, dropped], now: now) == [kept])
+    }
+
+    @Test func typingReplacesTheSessionEntry() {
+        let hel = entry("hel")
+        var list = TranslationHistory.recording(hel, after: nil, in: [], now: now)
+        let hello = entry("hello")
+        list = TranslationHistory.recording(hello, after: hel, in: list, now: now)
+        #expect(list == [hello])
+        let backspaced = entry("hell")  // shortening also continues
+        list = TranslationHistory.recording(backspaced, after: hello, in: list, now: now)
+        #expect(list == [backspaced])
+    }
+
+    @Test func otherTextOrPairStartsANewEntry() {
+        let hello = entry("hello")
+        let world = entry("world")
+        var list = TranslationHistory.recording(world, after: hello, in: [hello], now: now)
+        #expect(list.map(\.sourceText) == ["world", "hello"])
+        let french = entry("world", ("en", "fr"))
+        list = TranslationHistory.recording(french, after: world, in: list, now: now)
+        #expect(list.map(\.targetCode) == ["fr", "vi", "vi"])
+    }
+
+    @Test func repeatedTextMovesToTheTop() {
+        let old = entry("cat", age: day)
+        let other = entry("dog", age: 10)
+        let again = entry("cat")
+        let list = TranslationHistory.recording(again, after: nil, in: [other, old], now: now)
+        #expect(list == [again, other])
+    }
+
+    @Test func searchesSourceAndTranslationIgnoringCaseAndAccents() {
+        let a = HistoryEntry(date: now, sourceText: "Good morning", translation: "Chào buổi sáng",
+                             sourceCode: "en", targetCode: "vi", engine: .deepL)
+        let b = entry("Thank you")
+        #expect(TranslationHistory.filter([a, b], query: "chao") == [a])
+        #expect(TranslationHistory.filter([a, b], query: "THANK") == [b])
+        #expect(TranslationHistory.filter([a, b], query: " ") == [a, b])
+    }
+
+    @Test func previewIsOneShortLine() {
+        #expect(TranslationHistory.preview("one\ntwo\r\nthree") == "one two three")
+        #expect(TranslationHistory.preview(String(repeating: "a", count: 500)).count == 200)
+    }
+
+    @Test func storeRoundTripsAndToleratesAMissingFile() async {
+        let url = FileManager.default.temporaryDirectory.appending(path: "history-\(UUID().uuidString)/History.json")
+        let store = HistoryStore(url: url)
+        #expect(await store.load().isEmpty)
+        let entries = [entry("a"), entry("b", ("fr", "en"), age: day)]
+        await store.save(entries)
+        #expect(await store.load() == entries)
+        try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
+}
+
 @MainActor
 struct PanelModelTests {
-    private func makeModel() -> PanelModel {
+    private func makeModel(history: HistoryStore? = nil) -> PanelModel {
         let suite = "com.betty.translator.tests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
-        return PanelModel(settings: AppSettings(defaults: defaults))
+        return PanelModel(settings: AppSettings(defaults: defaults), historyStore: history ?? Self.temporaryStore())
+    }
+
+    private static func temporaryStore() -> HistoryStore {
+        HistoryStore(url: FileManager.default.temporaryDirectory.appending(path: "history-\(UUID().uuidString).json"))
     }
 
     private func key(_ code: UInt16, _ chars: String = "", _ flags: NSEvent.ModifierFlags = []) -> NSEvent {
@@ -354,5 +427,64 @@ struct PanelModelTests {
         model.sourceText = ""
         #expect(model.translation.isEmpty)
         #expect(model.status == .idle)
+    }
+
+    @Test func historyOpensFromActionsAndEscGoesBack() {
+        let model = makeModel()
+        model.sourceText = "hello"
+        #expect(model.handleKey(key(40, "k", .command)))
+        model.overlayQuery = "history"
+        #expect(model.filteredActions.first?.id == "history")
+        #expect(model.handleKey(key(36, "\r")))
+        #expect(model.screen == .history)
+        #expect(model.overlay == .none)
+        #expect(!model.handleKey(key(0, "a")))  // typing goes to the search field
+        model.historyQuery = "x"
+        #expect(model.handleKey(key(53)))  // esc clears the search first
+        #expect(model.historyQuery.isEmpty && model.screen == .history)
+        #expect(model.handleKey(key(53)))
+        #expect(model.screen == .translator)
+        #expect(model.sourceText == "hello")  // the translator keeps its text
+    }
+
+    @Test func openingAnEntryRestoresItsTextPairAndTranslation() async {
+        let store = Self.temporaryStore()
+        let older = HistoryEntry(date: .now.addingTimeInterval(-60), sourceText: "bonjour", translation: "hello",
+                                 sourceCode: "fr", targetCode: "en", engine: .deepL)
+        let newer = HistoryEntry(date: .now, sourceText: "cat", translation: "con mèo",
+                                 sourceCode: "en", targetCode: "vi", engine: .google)
+        await store.save([newer, older])
+        let model = makeModel(history: store)
+        await model.historyLoadTask?.value
+        model.showHistory()
+        #expect(model.filteredHistory == [newer, older])
+        #expect(model.handleKey(key(125)))  // down to "bonjour"
+        #expect(model.handleKey(key(125)))  // stays on the last row
+        #expect(model.selectedHistoryEntry == older)
+        #expect(model.handleKey(key(36, "\r")))
+        #expect(model.screen == .translator)
+        #expect(model.sourceText == "bonjour")
+        #expect(model.source.code == "fr" && model.target.code == "en")
+        #expect(model.translation == "hello")
+        #expect(model.status == .done(.deepL))
+    }
+
+    @Test func deletingAnEntryPersists() async {
+        let store = Self.temporaryStore()
+        let a = HistoryEntry(date: .now, sourceText: "a", translation: "A", sourceCode: "en", targetCode: "vi", engine: .apple)
+        let b = HistoryEntry(date: .now.addingTimeInterval(-5), sourceText: "b", translation: "B", sourceCode: "en", targetCode: "vi", engine: .apple)
+        await store.save([a, b])
+        let model = makeModel(history: store)
+        await model.historyLoadTask?.value
+        model.showHistory()
+        model.historyQuery = "b"
+        #expect(model.handleKey(key(51, "\u{7F}", .command)))
+        #expect(model.history == [a])
+        await model.historySaveTask?.value
+        #expect(await store.load() == [a])
+        model.historyQuery = ""
+        model.clearHistory()
+        await model.historySaveTask?.value
+        #expect(await store.load().isEmpty)
     }
 }

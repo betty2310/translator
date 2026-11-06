@@ -60,8 +60,12 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] Native rendering of the records' HTML: badges, pronunciation, numbered senses, examples, "Show More" (D35)
 - [x] Click a word in a sentence or paragraph to see its dictionary entries (D36)
 
+## M7: History
+- [x] Save translations for 30 days; typing more replaces the session's entry (D39)
+- [x] "Translation History" in Cmd+K: searchable, virtualized list that replaces the panes; open, copy, delete, clear (D39)
+
 ## Later / out of scope for v1
-- Translation history and favorites
+- Favorites (history is D39)
 - OCR (translate text in screenshots)
 - More engines (LLMs, Google Translation LLM model)
 - Alternative translations

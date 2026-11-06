@@ -9,8 +9,10 @@ struct PanelView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(spacing: 0) {
-                panes
-                    .padding(10)
+                switch model.screen {
+                case .translator: panes.padding(10)
+                case .history: HistoryView(model: model)  // replaces the panes (D39)
+                }
                 Divider()
                 FooterBar(model: model)
                     .padding(.horizontal, 14)
@@ -369,10 +371,15 @@ struct FooterBar: View {
                     .foregroundStyle(.secondary)
                     .help("Pinned (⌘.)")
             }
-            EngineMenu(model: model)
-            Divider().frame(height: 18)
-            FooterAction(title: "Copy Translation", keys: ["↩"]) { model.copyAndClose() }
-                .disabled(model.translation.isEmpty)
+            if model.screen == .history {
+                FooterAction(title: "Open in Translator", keys: ["↩"]) { model.openHistoryEntry() }
+                    .disabled(model.selectedHistoryEntry == nil)
+            } else {
+                EngineMenu(model: model)
+                Divider().frame(height: 18)
+                FooterAction(title: "Copy Translation", keys: ["↩"]) { model.copyAndClose() }
+                    .disabled(model.translation.isEmpty)
+            }
             Divider().frame(height: 18)
             FooterAction(title: "Actions", keys: ["⌘", "K"], primary: false) { model.overlay = .actions }
         }
