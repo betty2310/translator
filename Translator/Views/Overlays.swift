@@ -37,7 +37,9 @@ struct OverlaySearchField: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .onAppear { focused = true }
+        // Deferred: it appears in the same update where the source editor still holds focus, and a synchronous
+        // request is dropped, leaving typing in the editor.
+        .onAppear { Task { @MainActor in focused = true } }
     }
 }
 
