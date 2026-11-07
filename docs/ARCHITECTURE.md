@@ -8,7 +8,7 @@ Option+D (Carbon hotkey, KeyboardShortcuts)
    ▼
 PanelController.toggle()
    │  remember previous app (NSWorkspace.frontmostApplication)
-   │  SelectionReader: AX selected text ─▶ fallback simulated Cmd+C (≤120 ms, clipboard restored)
+   │  SelectionReader: AX selected text (≤0.2 s per call) ─▶ fallback simulated Cmd+C (≤120 ms, clipboard restored)
    ▼
 TranslatorPanel (NSPanel, pre-built, non-activating) shows PanelView
    │  text changes ─▶ PanelModel: 250 ms debounce (none for a prefilled selection), cancel previous task
@@ -82,7 +82,7 @@ protocol TranslationEngine: Sendable {
 - `NSGlassEffectView` is the panel's content view (Liquid Glass, rounded corners); the SwiftUI `PanelView` sits inside it in an `NSHostingView` (D12). Controls inside are plain (Raycast look): no glass buttons, two tinted cards, language selector as text + chevron in each card header.
 - Keyboard: `TranslatorPanel.sendEvent` hands every key-down to `PanelModel.handleKey` first. It consumes Esc, Enter, Cmd+Enter, Cmd+K/P/Shift+P/./D/, and, when an overlay is open, arrows and Enter; everything else reaches the SwiftUI text editor (Shift+Enter inserts a newline).
 - Overlays (`LanguagePicker`, `ActionPanel`) are SwiftUI views over the panes, bottom-right; their list state (`overlayQuery`, `overlayIndex`) lives in `PanelModel` so keys and clicks share one path.
-- Previous app + selection: on the hotkey path the AX read is synchronous; if the focused element has no selection attribute, a simulated Cmd+C runs **before** the panel takes key focus (bounded to ~120 ms, clipboard restored), otherwise the keystroke would land in the panel.
+- Previous app + selection: on the hotkey path the AX read is synchronous, with a 0.2 s messaging timeout per call instead of AX's 6 s default; if the focused element has no selection attribute, a simulated Cmd+C runs **before** the panel takes key focus (bounded to ~120 ms, clipboard restored), otherwise the keystroke would land in the panel.
 
 ## History (D39)
 

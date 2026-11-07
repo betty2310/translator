@@ -30,6 +30,8 @@ enum SelectionReader {
         guard isTrusted else { return .unavailable }
         var focused: CFTypeRef?
         let system = AXUIElementCreateSystemWide()
+        // A busy front app would hold the hotkey for AX's default 6 s; on a timeout the Cmd+C fallback runs.
+        AXUIElementSetMessagingTimeout(system, 0.2)
         guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
               let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else { return .unavailable }
         let element = unsafeDowncast(focused, to: AXUIElement.self)

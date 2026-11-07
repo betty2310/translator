@@ -40,6 +40,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 ## M4: System integration
 - [x] Accessibility permission check + prompt (D8)
 - [x] Prefill with the selected text (AX, fallback simulated Cmd+C + clipboard restore) (D8, D23)
+- [x] AX selection read capped at 0.2 s per call, so a busy app can't stall the hotkey (D4, D8)
 - [x] Cmd+Enter paste-back into the previous app; translation stays on the clipboard (D7, D23)
 
 ## M5: Settings & delivery
