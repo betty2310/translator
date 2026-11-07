@@ -25,6 +25,7 @@ Status: `[ ]` todo, `[~]` in progress / stubbed, `[x]` done. Update this file as
 - [x] `DeepLEngine` (free/pro host, code mapping, parsing tested) (D31)
 - [x] Auto mode: Google → DeepL → Apple on offline / error / 1.5 s timeout; no key → next engine (D32, D18)
 - [x] Translate as you type: 250 ms debounce, cancel in-flight (D10)
+- [x] Prefilled selection translates at once, no debounce (D10)
 - [x] Engine badge and error states (not configured, pack not downloaded, unsupported pair) (D3, D19)
 
 ## M3: Keyboard UX

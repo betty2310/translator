@@ -146,6 +146,7 @@ final class PanelModel {
         historySession = nil
         if let selection, !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, selection != sourceText {
             sourceText = selection
+            retranslate()  // nobody is typing: skip the debounce (D10)
         }
         lastInputWasClick = false  // the select-all that follows isn't a click
         selectAllToken += 1

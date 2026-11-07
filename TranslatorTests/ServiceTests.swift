@@ -420,6 +420,13 @@ struct PanelModelTests {
         #expect(model.selectAllToken == 3)
     }
 
+    @Test func freshSelectionTranslatesWithoutTheDebounce() async throws {
+        let model = makeModel()
+        model.prepareForShow(selection: "fresh")
+        try await Task.sleep(for: .milliseconds(50))  // well under the 250 ms debounce
+        #expect(model.status != .idle)
+    }
+
     @Test func emptyTextClearsTranslation() async throws {
         let model = makeModel()
         model.sourceText = "hello"

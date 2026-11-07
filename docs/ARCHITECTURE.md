@@ -11,7 +11,7 @@ PanelController.toggle()
    │  SelectionReader: AX selected text ─▶ fallback simulated Cmd+C (≤120 ms, clipboard restored)
    ▼
 TranslatorPanel (NSPanel, pre-built, non-activating) shows PanelView
-   │  text changes ─▶ PanelModel: 250 ms debounce, cancel previous task
+   │  text changes ─▶ PanelModel: 250 ms debounce (none for a prefilled selection), cancel previous task
    ▼
 EngineRouter.translate(text, pair, configuration)
    ├─ Google  : GoogleCloudEngine (v3 or v2 REST, API key header)

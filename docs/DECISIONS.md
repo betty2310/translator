@@ -32,7 +32,7 @@ Settled during the initial design interview (2026-10-18). Change these only with
 | D7 | Shortcuts (2026-10-18) | Cmd+K action panel · Cmd+P target-language picker · Cmd+Shift+P source-language picker · Cmd+. pin · Cmd+D swap (was Cmd+S, 2026-10-18) · Enter copy & close · Cmd+Enter paste into the previous app. Copy and paste show a "Copied" HUD. |
 | D8 | Initial input (2026-10-18) | Prefill with the front app's selected text (AX API; fallback: simulated Cmd+C with clipboard restore), else empty. Requires the Accessibility permission. |
 | D9 | Languages (2026-10-18) | Explicit source & target, no auto-detect. Default English → Vietnamese. |
-| D10 | Translate trigger (2026-10-18) | Translate as you type with a ~250 ms debounce; cancel in-flight requests. |
+| D10 | Translate trigger (2026-10-18) | Translate as you type with a ~250 ms debounce; cancel in-flight requests. A selection that prefills the panel (D8) translates at once, without the debounce (2026-11-07). |
 | D11 | Hotkey & dependencies (2026-10-18) | Default global hotkey Option+D (Carbon hotkey, no permission needed). Minimal third-party deps: `KeyboardShortcuts`, `Sparkle`. Otherwise Apple frameworks only. |
 | D12 | Platform & stack (2026-10-18) | macOS 26+. AppKit owns the panel, focus and activation; SwiftUI renders the content (`NSHostingView`). Liquid Glass. Swift 6 strict concurrency. |
 | D13 | v1 scope (2026-10-18) | Core loop (hotkey → panel → translate → copy/paste), Settings, Apple fallback, TTS (`AVSpeechSynthesizer`). Alternative translations dropped (not offered by the official API). Later: history, OCR, more engines. *DeepL pulled into v1 by D31 (2026-10-18). Dictionary entries pulled in by D35 (2026-10-18). History pulled in by D39 (2026-11-06).* |
